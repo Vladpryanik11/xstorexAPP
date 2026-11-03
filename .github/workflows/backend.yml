@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'backend/**'
+      - 'deploy/**'
       - '.github/workflows/backend.yml'
   pull_request:
     paths:
       - 'backend/**'
+      - 'deploy/**'
       - '.github/workflows/backend.yml'
   workflow_dispatch:
 
@@ -38,3 +40,57 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: istore
+          POSTGRES_USER: istore
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U istore -d istore"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      ADMIN_TOKEN: ci-admin-token-0123456789
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deploy configs
+        env:
+          DOMAIN: ci.example.com
+          ACME_EMAIL: ci@example.com
+          POSTGRES_PASSWORD: ci-password
+          GRANT_SECRET: ci-grant-secret
+        run: |
+          docker compose -f deploy/docker-compose.yml config -q
+          docker run --rm -e DOMAIN -e ACME_EMAIL -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      - name: Build image
+        run: docker build -t istore-backend backend
+
+      - name: Smoke test with PostgreSQL
+        run: |
+          docker run -d --name api --network host \
+            -e DATABASE_URL=postgres://istore:ci-password@127.0.0.1:5432/istore \
+            -e PUBLIC_BASE_URL=https://ci.example.com \
+            -e ADMIN_TOKEN -e GRANT_SECRET=ci-grant-secret \
+            istore-backend
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8080/api/v1/client/store-state
+          CODE=$(curl -fsS -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+            -d '{"count":1,"plan_id":"month"}' http://127.0.0.1:8080/admin/v1/activation-codes | jq -r '.codes[0]')
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d "{\"activation_code\":\"$CODE\",\"device\":{\"install_id\":\"$(cat /proc/sys/kernel/random/uuid)\"}}" \
+            http://127.0.0.1:8080/api/v1/app/activate | jq -e '.token' > /dev/null
+
+      - name: Container logs
+        if: always()
+        run: docker logs api || true

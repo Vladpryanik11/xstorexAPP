@@ -5,6 +5,21 @@ import { loadConfig } from './config.js';
 if (existsSync('.env')) process.loadEnvFile('.env');
 
 const config = loadConfig();
+
+// В продакшене недостающие секреты — ошибка запуска, а не предупреждение ниже.
+if (process.env.NODE_ENV === 'production') {
+  const missing = [
+    !config.databaseUrl && 'DATABASE_URL',
+    !config.adminToken && 'ADMIN_TOKEN',
+    !process.env.GRANT_SECRET && 'GRANT_SECRET',
+    !config.publicBaseUrl.startsWith('https://') && 'PUBLIC_BASE_URL (https://…)',
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    console.error(`Production config is incomplete: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 const app = await buildApp(config);
 
 if (!config.adminToken) app.log.warn('ADMIN_TOKEN is not set: /admin/v1 answers 503');

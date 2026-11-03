@@ -1,0 +1,59 @@
+name: istore
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: istore
+      POSTGRES_USER: istore
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?заполните POSTGRES_PASSWORD в deploy/.env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U istore -d istore"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ../backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://istore:${POSTGRES_PASSWORD}@db:5432/istore
+      PUBLIC_BASE_URL: https://${DOMAIN:?заполните DOMAIN в deploy/.env}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?заполните ADMIN_TOKEN в deploy/.env}
+      GRANT_SECRET: ${GRANT_SECRET:?заполните GRANT_SECRET в deploy/.env}
+      RENEW_URL: ${RENEW_URL:-}
+      TRUST_PROXY: "true"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - storage:/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?заполните ACME_EMAIL в deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  storage:
+  caddy-data:
+  caddy-config:

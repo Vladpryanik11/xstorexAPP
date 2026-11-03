@@ -1,0 +1,10 @@
+node_modules
+dist
+.data
+.scratch
+storage
+coverage
+test
+*.log
+.env
+.env.*

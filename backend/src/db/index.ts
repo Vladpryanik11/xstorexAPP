@@ -47,9 +47,17 @@ export async function openDatabase(opts: DatabaseOptions): Promise<Database> {
   return database;
 }
 
+/** Базовые тарифы: без них на чистой базе нельзя выпустить ни одного кода активации. */
+export const DEFAULT_PLANS = [
+  { id: 'month', nameEn: '1 month', nameRu: '1 месяц', periodMonths: 1, durationDays: 30 },
+  { id: 'quarter', nameEn: '3 months', nameRu: '3 месяца', periodMonths: 3, durationDays: 90 },
+  { id: 'year', nameEn: '1 year', nameRu: '1 год', periodMonths: 12, durationDays: 365 },
+];
+
 export async function ensureSingletons(db: Db): Promise<void> {
   await db.insert(schema.storeState).values({ id: 1 }).onConflictDoNothing();
   await db.insert(schema.clientVersion).values({ id: 1 }).onConflictDoNothing();
+  await db.insert(schema.plans).values(DEFAULT_PLANS).onConflictDoNothing();
 }
 
 export { schema };

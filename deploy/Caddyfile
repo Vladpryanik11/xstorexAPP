@@ -1,0 +1,18 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Сертификат Let's Encrypt выпускается автоматически, как только DNS домена указывает на сервер.
+{$DOMAIN} {
+	request_body {
+		max_size 2GB
+	}
+
+	# Без сжатия: SSE должен уходить клиенту сразу, а IPA и так zip.
+	reverse_proxy api:8080 {
+		flush_interval -1
+	}
+
+	header -Server
+	log
+}

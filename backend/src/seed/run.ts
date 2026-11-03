@@ -4,7 +4,7 @@ import path from 'node:path';
 import { sql } from 'drizzle-orm';
 import type { AppContext } from '../context.js';
 import { ensureSingletons } from '../db/index.js';
-import { accounts, appBuilds, categories, clientVersion, devices, plans, storeState, tokens } from '../db/schema.js';
+import { accounts, appBuilds, categories, clientVersion, devices, storeState, tokens } from '../db/schema.js';
 import { randomToken, sha256Hex } from '../lib/crypto.js';
 import { createApp } from '../modules/admin/apps.js';
 import { addBuildFromFile, digestFile } from '../modules/admin/builds.js';
@@ -94,11 +94,7 @@ export async function seedDemo(ctx: AppContext, options: SeedOptions = {}): Prom
   await ctx.storage.deletePrefix('builds');
   await ctx.bus.init();
 
-  await ctx.db.insert(plans).values([
-    { id: 'month', nameEn: '1 month', nameRu: '1 месяц', periodMonths: 1, durationDays: 30 },
-    { id: 'quarter', nameEn: '3 months', nameRu: '3 месяца', periodMonths: 3, durationDays: 90 },
-    { id: 'year', nameEn: '1 year', nameRu: '1 год', periodMonths: 12, durationDays: 365 },
-  ]);
+  // тарифы создаёт ensureSingletons выше
   await ctx.db.insert(categories).values(
     CATEGORIES.map((c, i) => ({ id: c.id, kind: c.kind, nameEn: c.en, nameRu: c.ru, sfSymbol: c.sf, position: i })),
   );

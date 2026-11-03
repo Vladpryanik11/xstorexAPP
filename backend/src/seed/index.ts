@@ -6,6 +6,11 @@ import { seedDemo } from './run.js';
 
 if (existsSync('.env')) process.loadEnvFile('.env');
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('Seed wipes the database and storage: refusing to run with NODE_ENV=production.');
+  process.exit(1);
+}
+
 const config = loadConfig();
 const started = Date.now();
 console.log(`Seeding ${config.databaseUrl ? 'PostgreSQL (DATABASE_URL)' : `PGlite at ${config.pgliteDir}`}`);

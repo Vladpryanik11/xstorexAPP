@@ -8,7 +8,8 @@
 | [docs/API.md](docs/API.md) | Контракт API v1, общий для бэкенда и клиента |
 | [backend/](backend/) | Node.js 22 + TypeScript, Fastify, Drizzle, PostgreSQL / PGlite |
 | [ios/](ios/) | Swift, UIKit, iOS 15+, проект генерирует XcodeGen |
-| [.github/workflows/](.github/workflows/) | CI: тесты бэкенда (Ubuntu), сборка и тесты iOS (macOS) |
+| [deploy/](deploy/) | Деплой на VPS: Docker Compose (бэкенд + PostgreSQL + Caddy с HTTPS), инструкция |
+| [.github/workflows/](.github/workflows/) | CI: тесты бэкенда и проверка Docker-образа (Ubuntu), сборка и тесты iOS (macOS) |
 
 ## Быстрый старт
 
