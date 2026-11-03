@@ -282,7 +282,7 @@ describe('app update notifications', () => {
     expect(json(res)).toEqual({ devices: 1, sent: 1, failed: 0, removed: 0, errors: [] });
     expect(sender.sent[0]!.payload).toMatchObject({
       kind: 'test',
-      aps: { alert: { title: 'iStore', body: 'Тестовое уведомление: push работает.' } },
+      aps: { alert: { title: 'Xstore', body: 'Тестовое уведомление: push работает.' } },
     });
 
     const signedOut = await env.app.inject({

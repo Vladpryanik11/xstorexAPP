@@ -242,7 +242,7 @@ export async function adminRoutes(app: FastifyInstance, opts: { ctx: AppContext 
       payload: {
         aps: {
           alert: {
-            title: body.title ?? 'iStore',
+            title: body.title ?? 'Xstore',
             body: body.body ?? (lang === 'ru' ? 'Тестовое уведомление: push работает.' : 'Test notification: push works.'),
           },
           sound: 'default',

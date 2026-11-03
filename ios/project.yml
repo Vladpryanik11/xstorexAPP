@@ -49,7 +49,7 @@ targets:
       path: iStore/Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        CFBundleDisplayName: iStore
+        CFBundleDisplayName: Xstore
         CFBundleName: $(PRODUCT_NAME)
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)

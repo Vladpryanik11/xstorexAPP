@@ -1,6 +1,6 @@
 import UIKit
 
-/// Палитра iStore (SPEC §3).
+/// Палитра Xstore (SPEC §3).
 enum Palette {
     // MARK: Бренд
 

@@ -2,7 +2,7 @@
   "name": "istore-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "iStore backend, stage 1: catalog, activation, OTA installs, admin API",
+  "description": "Xstore backend, stage 1: catalog, activation, OTA installs, admin API",
   "type": "module",
   "engines": {
     "node": ">=22.12"

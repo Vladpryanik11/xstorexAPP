@@ -1,7 +1,7 @@
-/* iStore — English */
+/* Xstore — English */
 
 /* Brand */
-"brand.name" = "iStore";
+"brand.name" = "Xstore";
 
 /* Common */
 "common.ok" = "OK";
@@ -20,14 +20,14 @@
 "tab.search" = "Search";
 
 /* Activation */
-"activation.title" = "Welcome to iStore";
+"activation.title" = "Welcome to Xstore";
 "activation.subtitle" = "Two quick steps and the catalog is yours.";
 "activation.step1" = "Enter the code from your subscription email.";
 "activation.step2" = "Tap “Sign in” — this device will remember you.";
 "activation.code.placeholder" = "XXXX-XXXX-XXXX";
 "activation.code.label" = "Activation code";
 "activation.submit" = "Sign in";
-"activation.hint" = "No code yet? Get a subscription on the iStore website and we’ll email it to you.";
+"activation.hint" = "No code yet? Get a subscription on the Xstore website and we’ll email it to you.";
 "activation.error.invalid_code" = "We couldn’t find this code. Check it for typos and try again.";
 "activation.error.code_used" = "This code is already active on another device. Use a new code or contact support.";
 "activation.error.account_inactive" = "This account is paused. Renew your subscription or contact support.";
@@ -176,10 +176,10 @@
 "account.device_format" = "%@, iOS %@";
 "account.install_id" = "Install ID";
 "account.install_id_format" = "•••• %@";
-"account.app_version" = "iStore version";
+"account.app_version" = "Xstore version";
 "account.app_version_format" = "%@ (%@)";
 "account.sign_out" = "Sign out";
-"account.sign_out.confirm_title" = "Sign out of iStore?";
+"account.sign_out.confirm_title" = "Sign out of Xstore?";
 "account.sign_out.confirm_message" = "Installed apps stay on your device. To sign back in, you’ll need an activation code.";
 
 /* Follow */
@@ -196,7 +196,7 @@
 
 /* Client update */
 "update.title" = "An update is ready";
-"update.mandatory.title" = "Time to update iStore";
+"update.mandatory.title" = "Time to update Xstore";
 "update.version_format" = "Version %@";
 "update.hint" = "After you tap “Update”, iOS will ask you to confirm the install.";
 "update.mandatory.message" = "This version is no longer supported. Update to keep using the store.";

@@ -1,4 +1,4 @@
-# iStore — бэкенд (этап 1)
+# Xstore — бэкенд (этап 1)
 
 Node.js 22 + TypeScript (ESM, strict), Fastify 5, zod, Drizzle ORM. В разработке и тестах база — PGlite (PostgreSQL в WASM, внутри процесса), в продакшене — PostgreSQL через `DATABASE_URL`. Docker и установленный Postgres не нужны.
 

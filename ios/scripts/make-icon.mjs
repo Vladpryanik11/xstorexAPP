@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Генерирует иконку iStore 1024×1024 (PNG, RGB без альфы, как требует App Store):
+// Генерирует иконку Xstore 1024×1024 (PNG, RGB без альфы, как требует App Store):
 // бренд-градиент по диагонали сверху справа → снизу слева и белая монограмма «i».
 // Собственный PNG-энкодер на node:zlib, без зависимостей.
 // Запуск: node ios/scripts/make-icon.mjs [путь/к/AppIcon.png]
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const SIZE = 1024;
 const here = dirname(fileURLToPath(import.meta.url));
 const output =
-  process.argv[2] ?? join(here, "..", "iStore", "Resources", "Assets.xcassets", "AppIcon.appiconset", "AppIcon.png");
+  process.argv[2] ?? join(here, "..", "Xstore", "Resources", "Assets.xcassets", "AppIcon.appiconset", "AppIcon.png");
 
 // Бренд-градиент (SPEC §3).
 const stops = [

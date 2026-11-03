@@ -1,6 +1,6 @@
 import UIKit
 
-/// Обновление самого iStore. Необязательное — шит с «Обновить» и «Не сейчас»;
+/// Обновление самого Xstore. Необязательное — шит с «Обновить» и «Не сейчас»;
 /// обязательное — неснимаемый экран в отдельном окне поверх всего.
 final class ClientUpdateViewController: UIViewController {
     private let version: ClientVersion

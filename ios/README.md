@@ -1,4 +1,4 @@
-# iStore — iOS-клиент (этап 1)
+# Xstore — iOS-клиент (этап 1)
 
 Программный UIKit, Swift 5 language mode со строгой проверкой конкурентности `targeted`, iOS 15.0+, iPhone и iPad. Без сторонних зависимостей. Проект генерирует [XcodeGen](https://github.com/yonaskolb/XcodeGen) из `project.yml`, сам `iStore.xcodeproj` в репозиторий не кладётся.
 

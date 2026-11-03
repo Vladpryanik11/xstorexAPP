@@ -1,6 +1,6 @@
 import UIKit
 
-/// Экран-заглушка под шлюзами на холодном старте: бренд-градиент и знак iStore.
+/// Экран-заглушка под шлюзами на холодном старте: бренд-градиент и знак Xstore.
 final class LaunchPlaceholderViewController: UIViewController {
     private let gradient = BrandGradientView()
     private let mark = BrandMarkView()

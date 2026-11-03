@@ -37,7 +37,7 @@ export interface ApnsConfig {
   teamId: string;
   /** PEM ключа `.p8`. */
   keyPem: string;
-  /** Bundle id приложения iStore. */
+  /** Bundle id приложения Xstore. */
   topic: string;
 }
 

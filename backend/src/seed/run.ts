@@ -232,8 +232,8 @@ export async function seedDemo(ctx: AppContext, options: SeedOptions = {}): Prom
     latestVersion: '1.0.0',
     latestBuild: 100,
     minSupportedBuild: 90,
-    releaseNotesEn: 'First public release of iStore.',
-    releaseNotesRu: 'Первый публичный релиз iStore.',
+    releaseNotesEn: 'First public release of Xstore.',
+    releaseNotesRu: 'Первый публичный релиз Xstore.',
     updateUrl: null,
   });
 

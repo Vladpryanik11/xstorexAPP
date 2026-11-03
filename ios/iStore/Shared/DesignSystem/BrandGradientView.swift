@@ -48,7 +48,7 @@ final class GradientView: UIView {
     }
 }
 
-/// Бренд-градиент iStore. `dark = true` — тёмный вариант `#18429D → #0D2353`.
+/// Бренд-градиент Xstore. `dark = true` — тёмный вариант `#18429D → #0D2353`.
 final class BrandGradientView: UIView {
     private let gradient: GradientView
 
@@ -72,7 +72,7 @@ final class BrandGradientView: UIView {
     }
 }
 
-/// Знак iStore: монограмма «i» на бренд-градиенте, как иконка приложения.
+/// Знак Xstore: монограмма «i» на бренд-градиенте, как иконка приложения.
 final class BrandMarkView: UIView {
     private let gradient = GradientView(colors: Palette.brandGradient)
     private let stem = UIView()

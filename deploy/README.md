@@ -1,4 +1,4 @@
-# Деплой бэкенда iStore на VPS
+# Деплой бэкенда Xstore на VPS
 
 Сервер поднимается одной командой Docker Compose: бэкенд, PostgreSQL и Caddy. Caddy сам выпускает и продлевает сертификат Let's Encrypt.
 
@@ -78,7 +78,7 @@ curl -s -X PUT -H "$H" -H 'Content-Type: application/json' \
 Необязательно: без ключа сервер работает, но уведомлений об обновлениях не будет.
 
 1. В [Apple Developer → Keys](https://developer.apple.com/account/resources/authkeys/list) создайте ключ с галочкой **Apple Push Notifications service (APNs)** и скачайте `AuthKey_XXXXXXXXXX.p8`. Файл скачивается один раз, храните его как пароль.
-2. У App ID приложения iStore (`com.istore.app`) включите capability **Push Notifications** и перевыпустите профиль подписи.
+2. У App ID приложения Xstore (`com.istore.app`) включите capability **Push Notifications** и перевыпустите профиль подписи.
 3. Перенесите ключ на сервер и впишите в `deploy/.env`:
 
 ```bash
@@ -88,13 +88,13 @@ nano .env   # APNS_KEY_ID — 10 символов из имени ключа, AP
 docker compose up -d
 ```
 
-4. Проверьте на своём устройстве: войдите в iStore, разрешите уведомления (запрос появляется при первой подписке на приложение) и отправьте тестовое уведомление (`A` и `H` — как в разделе 4):
+4. Проверьте на своём устройстве: войдите в Xstore, разрешите уведомления (запрос появляется при первой подписке на приложение) и отправьте тестовое уведомление (`A` и `H` — как в разделе 4):
 
 ```bash
 curl -s -X POST -H "$H" -H 'Content-Type: application/json' -d '{"account_id":"acc_…"}' $A/push/test
 ```
 
-`account_id` виден в ответе активации и в `GET /api/v1/client/profile`. Ответ `"sent": 1` значит, что APNs принял уведомление. Если вместо этого пришла ошибка `BadDeviceToken`, проверьте, что сборка iStore и сервер используют одно окружение APNs: Ad Hoc и Enterprise работают с production, сборка из Xcode — с sandbox.
+`account_id` виден в ответе активации и в `GET /api/v1/client/profile`. Ответ `"sent": 1` значит, что APNs принял уведомление. Если вместо этого пришла ошибка `BadDeviceToken`, проверьте, что сборка Xstore и сервер используют одно окружение APNs: Ad Hoc и Enterprise работают с production, сборка из Xcode — с sandbox.
 
 Подписчики приложения получают push, когда вы загружаете билд с версией выше текущей.
 
@@ -105,7 +105,7 @@ iOS ставит IPA вне App Store только на устройства, к
 - **Ad Hoc / Development** — устройства, чьи UDID зарегистрированы в вашем аккаунте Apple Developer (до 100 iPhone в год на аккаунт). В профиль этого IPA нужно включить UDID устройства и переподписать IPA после добавления нового устройства.
 - **Enterprise** — любые устройства, но только сотрудники вашей организации.
 
-Это относится и к самому iStore, и к каждому приложению в каталоге.
+Это относится и к самому Xstore, и к каждому приложению в каталоге.
 
 ## Обновление
 
