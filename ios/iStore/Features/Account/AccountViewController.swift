@@ -1,7 +1,7 @@
 import SafariServices
 import UIKit
 
-/// Шит «Аккаунт»: план, статус, срок, «Продлить», устройство, версия приложения, «Выйти».
+/// Шит «Аккаунт»: план, статус, срок, «Продлить», отслеживаемые приложения, устройство, версия, «Выйти».
 final class AccountViewController: UITableViewController {
     private enum Row {
         case summary
@@ -9,6 +9,7 @@ final class AccountViewController: UITableViewController {
         case status
         case expires
         case renew
+        case following
         case device
         case installId
         case appVersion
@@ -18,6 +19,7 @@ final class AccountViewController: UITableViewController {
     private let clientService: ClientServicing
     private let configuration: AppConfiguration
     private let device: DeviceInfo
+    private let makeFollowingList: () -> UIViewController?
     private let onSignOut: () -> Void
 
     private var profile: ClientProfile?
@@ -29,11 +31,13 @@ final class AccountViewController: UITableViewController {
         clientService: ClientServicing,
         configuration: AppConfiguration,
         device: DeviceInfo,
+        makeFollowingList: @escaping () -> UIViewController?,
         onSignOut: @escaping () -> Void
     ) {
         self.clientService = clientService
         self.configuration = configuration
         self.device = device
+        self.makeFollowingList = makeFollowingList
         self.onSignOut = onSignOut
         super.init(style: .insetGrouped)
     }
@@ -82,6 +86,7 @@ final class AccountViewController: UITableViewController {
         if profile?.account.renewUrl != nil {
             result.append([.renew])
         }
+        result.append([.following])
         result.append([.device, .installId, .appVersion])
         result.append([.signOut])
         sections = result
@@ -145,6 +150,14 @@ final class AccountViewController: UITableViewController {
             cell.contentConfiguration = content
             cell.selectionStyle = .default
             cell.accessoryType = .disclosureIndicator
+        case .following:
+            var content = UIListContentConfiguration.cell()
+            content.text = L10n.tr("account.following")
+            content.image = UIImage(systemName: "bell.fill")
+            content.imageProperties.tintColor = Palette.accent
+            cell.contentConfiguration = content
+            cell.selectionStyle = .default
+            cell.accessoryType = .disclosureIndicator
         case .device:
             let model = profile?.device?.model ?? device.model
             let os = profile?.device?.osVersion ?? device.osVersion
@@ -203,6 +216,9 @@ final class AccountViewController: UITableViewController {
             let safari = SFSafariViewController(url: url)
             safari.preferredControlTintColor = Palette.accent
             present(safari, animated: true)
+        case .following:
+            guard let controller = makeFollowingList() else { return }
+            navigationController?.pushViewController(controller, animated: true)
         case .signOut:
             confirmSignOut()
         default:

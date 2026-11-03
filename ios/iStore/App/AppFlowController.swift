@@ -433,7 +433,7 @@ final class AppFlowController: AppRouting {
     }
 
     func showAccount(from source: UIViewController) {
-        let sheet = factory.makeAccount { [weak self] in
+        let sheet = factory.makeAccount(router: self) { [weak self] in
             self?.signOut()
         }
         let presenter = source.navigationController ?? source

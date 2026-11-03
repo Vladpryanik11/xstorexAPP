@@ -7,6 +7,11 @@ final class AppRowCell: UICollectionViewCell {
 
     var onInstallTap: ((AppSummary) -> Void)?
 
+    /// Действия VoiceOver для строки (дублируют контекстное меню).
+    var rowAccessibilityActions: [UIAccessibilityCustomAction]? {
+        didSet { nameLabel.accessibilityCustomActions = rowAccessibilityActions }
+    }
+
     private let iconView = AppIconView()
     private let nameLabel = UILabel()
     private let subtitleLabel = UILabel()
@@ -101,10 +106,12 @@ final class AppRowCell: UICollectionViewCell {
         installService = nil
         app = nil
         onInstallTap = nil
+        rowAccessibilityActions = nil
         installButton.apply(.idle, animated: false)
     }
 
-    func configure(app: AppSummary, installService: InstallService, showsMeta: Bool = false) {
+    /// `note` заменяет строку метаданных, например «Уведомления выключены».
+    func configure(app: AppSummary, installService: InstallService, showsMeta: Bool = false, note: String? = nil) {
         self.app = app
         self.installService = installService
         iconView.setIcon(url: app.iconUrl)
@@ -112,7 +119,10 @@ final class AppRowCell: UICollectionViewCell {
         subtitleLabel.text = app.subtitle ?? app.category?.name
         subtitleLabel.isHidden = subtitleLabel.text == nil
 
-        if showsMeta {
+        if let note = note {
+            metaLabel.text = note
+            metaLabel.isHidden = false
+        } else if showsMeta {
             var parts: [String] = []
             if let rating = app.rating {
                 parts.append("★ " + Formatters.rating(rating))
@@ -124,7 +134,7 @@ final class AppRowCell: UICollectionViewCell {
             metaLabel.isHidden = true
         }
 
-        nameLabel.accessibilityLabel = [app.name, subtitleLabel.text].compactMap { $0 }.joined(separator: ", ")
+        nameLabel.accessibilityLabel = [app.name, subtitleLabel.text, note].compactMap { $0 }.joined(separator: ", ")
         installButton.apply(installService.state(for: app.id), animated: false)
         let appId = app.id
         installService.addObserver(self) { [weak self] changedId, state in

@@ -41,6 +41,7 @@ final class FeatureFactory {
             appId: appId,
             summary: summary,
             catalog: container.catalogService,
+            follows: container.followService,
             live: container.liveSync,
             installService: container.installService,
             device: container.device,
@@ -52,6 +53,15 @@ final class FeatureFactory {
         RoomListViewController(
             source: source,
             catalog: container.catalogService,
+            live: container.liveSync,
+            installService: container.installService,
+            router: router
+        )
+    }
+
+    func makeFollowingList(router: AppRouting) -> FollowingListViewController {
+        FollowingListViewController(
+            follows: container.followService,
             live: container.liveSync,
             installService: container.installService,
             router: router
@@ -85,11 +95,15 @@ final class FeatureFactory {
 
     // MARK: - Шиты
 
-    func makeAccount(onSignOut: @escaping () -> Void) -> UIViewController {
+    func makeAccount(router: AppRouting, onSignOut: @escaping () -> Void) -> UIViewController {
         let controller = AccountViewController(
             clientService: container.clientService,
             configuration: container.configuration,
             device: container.device,
+            makeFollowingList: { [weak self, weak router] in
+                guard let self = self, let router = router else { return nil }
+                return self.makeFollowingList(router: router)
+            },
             onSignOut: onSignOut
         )
         let navigation = UINavigationController(rootViewController: controller)

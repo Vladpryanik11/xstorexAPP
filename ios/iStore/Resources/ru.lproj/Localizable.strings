@@ -171,6 +171,7 @@
 "account.status.suspended" = "Приостановлена";
 "account.expires" = "Действует до";
 "account.renew" = "Продлить подписку";
+"account.following" = "Отслеживаемые приложения";
 "account.device" = "Устройство";
 "account.device_format" = "%@, iOS %@";
 "account.install_id" = "ID установки";
@@ -180,6 +181,18 @@
 "account.sign_out" = "Выйти";
 "account.sign_out.confirm_title" = "Выйти из iStore?";
 "account.sign_out.confirm_message" = "Установленные приложения останутся на устройстве. Чтобы войти снова, понадобится код активации.";
+
+/* Подписки на приложения */
+"follow.follow" = "Следить";
+"follow.following" = "Слежу";
+"follow.following_note" = "Вы следите за приложением";
+"follow.muted_note" = "Уведомления выключены";
+"follow.mute" = "Выключить уведомления";
+"follow.unmute" = "Включить уведомления";
+"follow.unfollow" = "Не следить";
+"following.title" = "Отслеживаемые";
+"following.empty.title" = "Пока ни за чем не следите";
+"following.empty.message" = "Нажмите на колокольчик в карточке приложения, чтобы следить за его обновлениями.";
 
 /* Обновление клиента */
 "update.title" = "Готово обновление";

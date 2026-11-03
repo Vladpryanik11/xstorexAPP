@@ -7,6 +7,7 @@ final class AppDetailViewController: UIViewController {
     private var summary: AppSummary?
     private var detail: CatalogApp?
     private let catalog: CatalogServicing
+    private let follows: FollowServicing
     private let live: CatalogLiveObserving
     private let installService: InstallService
     private let device: DeviceInfo
@@ -30,14 +31,18 @@ final class AppDetailViewController: UIViewController {
     private let similarStack = UIStackView()
     private let stateView = StateView()
     private var detailSections: [UIView] = []
+    private var followStatus: FollowStatus?
+    private var isUpdatingFollow = false
 
     private var loadTask: Task<Void, Never>?
     private var liveTask: Task<Void, Never>?
+    private var followTask: Task<Void, Never>?
 
     init(
         appId: String,
         summary: AppSummary?,
         catalog: CatalogServicing,
+        follows: FollowServicing,
         live: CatalogLiveObserving,
         installService: InstallService,
         device: DeviceInfo,
@@ -46,6 +51,7 @@ final class AppDetailViewController: UIViewController {
         self.appId = appId
         self.summary = summary
         self.catalog = catalog
+        self.follows = follows
         self.live = live
         self.installService = installService
         self.device = device
@@ -69,6 +75,7 @@ final class AppDetailViewController: UIViewController {
         bindInstallButton()
         observeLiveChanges()
         load()
+        loadFollowStatus()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -76,6 +83,7 @@ final class AppDetailViewController: UIViewController {
         if isMovingFromParent || navigationController?.isBeingDismissed == true {
             liveTask?.cancel()
             loadTask?.cancel()
+            followTask?.cancel()
             installService.removeObserver(self)
         }
     }
@@ -384,6 +392,8 @@ final class AppDetailViewController: UIViewController {
         detailSections = []
         header.installButton.isEnabled = false
         header.installButton.alpha = 0.4
+        followStatus = nil
+        updateFollowButton()
         stateView.isHidden = false
         stateView.show(.message(
             symbol: "xmark.app",
@@ -408,6 +418,101 @@ final class AppDetailViewController: UIViewController {
                     self.load()
                 default:
                     break
+                }
+            }
+        }
+    }
+
+    // MARK: - Подписка на обновления
+
+    private func loadFollowStatus() {
+        followTask?.cancel()
+        let follows = self.follows
+        let appId = self.appId
+        followTask = Task { [weak self] in
+            // Без статуса кнопка остаётся скрытой: ошибку загрузки карточка покажет сама.
+            guard let status = try? await follows.status(appId: appId) else { return }
+            self?.followStatus = status
+            self?.updateFollowButton()
+        }
+    }
+
+    /// Колокольчик в навбаре: без подписки — «Следить», с подпиской — меню с уведомлениями и отпиской.
+    private func updateFollowButton() {
+        guard let status = followStatus else {
+            navigationItem.rightBarButtonItem = nil
+            return
+        }
+        let item: UIBarButtonItem
+        if status.following {
+            let muted = status.muted
+            let toggleMute = UIAction(
+                title: L10n.tr(muted ? "follow.unmute" : "follow.mute"),
+                image: UIImage(systemName: muted ? "bell" : "bell.slash")
+            ) { [weak self] _ in
+                self?.changeFollow { follows, appId in try await follows.setMuted(!muted, appId: appId) }
+            }
+            let unfollow = UIAction(
+                title: L10n.tr("follow.unfollow"),
+                image: UIImage(systemName: "minus.circle"),
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.changeFollow { follows, appId in try await follows.unfollow(appId: appId) }
+            }
+            item = UIBarButtonItem(
+                image: muted ? UIImage(systemName: "bell.slash.fill") : UIImage(systemName: "bell.fill"),
+                style: .plain,
+                target: nil,
+                action: nil
+            )
+            item.menu = UIMenu(
+                title: L10n.tr(muted ? "follow.muted_note" : "follow.following_note"),
+                children: [toggleMute, unfollow]
+            )
+            item.accessibilityLabel = L10n.tr("follow.following")
+            item.accessibilityValue = muted ? L10n.tr("follow.muted_note") : nil
+        } else {
+            item = UIBarButtonItem(
+                image: UIImage(systemName: "bell"),
+                style: .plain,
+                target: self,
+                action: #selector(followTapped)
+            )
+            item.accessibilityLabel = L10n.tr("follow.follow")
+        }
+        item.isEnabled = !isUpdatingFollow
+        navigationItem.rightBarButtonItem = item
+    }
+
+    @objc private func followTapped() {
+        changeFollow { follows, appId in try await follows.follow(appId: appId) }
+    }
+
+    private func changeFollow(_ operation: @escaping @Sendable (FollowServicing, String) async throws -> FollowStatus) {
+        guard !isUpdatingFollow else { return }
+        isUpdatingFollow = true
+        updateFollowButton()
+        let follows = self.follows
+        let appId = self.appId
+        let wasFollowing = followStatus?.following ?? false
+        Task { [weak self] in
+            do {
+                let status = try await operation(follows, appId)
+                guard let self = self else { return }
+                if status.following && !wasFollowing {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                }
+                self.isUpdatingFollow = false
+                self.followStatus = status
+                self.updateFollowButton()
+            } catch {
+                guard let self = self else { return }
+                self.isUpdatingFollow = false
+                self.updateFollowButton()
+                let apiError = APIError.wrap(error)
+                // На `account_inactive` APIClient уже открыл окно продления.
+                if apiError != .accountInactive {
+                    self.presentError(apiError)
                 }
             }
         }

@@ -14,6 +14,7 @@ final class AppContainer {
     let authService: AuthServicing
     let clientService: ClientServicing
     let catalogService: CatalogServicing
+    let followService: FollowServicing
     let clientUpdate: ClientUpdateChecking
     let liveSync: CatalogLiveSync
     let telemetry: TelemetryRecorder
@@ -51,6 +52,7 @@ final class AppContainer {
         clientService = ClientService(api: apiClient)
         let catalogService = CatalogService(api: apiClient)
         self.catalogService = catalogService
+        followService = FollowService(api: apiClient)
         clientUpdate = ClientUpdateService(api: apiClient)
         liveSync = CatalogLiveSync(api: apiClient, catalog: catalogService)
         let telemetry = TelemetryRecorder(api: apiClient, tokenStore: tokenStore)

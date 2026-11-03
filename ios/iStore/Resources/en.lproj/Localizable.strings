@@ -171,6 +171,7 @@
 "account.status.suspended" = "Paused";
 "account.expires" = "Active until";
 "account.renew" = "Renew subscription";
+"account.following" = "Followed apps";
 "account.device" = "Device";
 "account.device_format" = "%@, iOS %@";
 "account.install_id" = "Install ID";
@@ -180,6 +181,18 @@
 "account.sign_out" = "Sign out";
 "account.sign_out.confirm_title" = "Sign out of iStore?";
 "account.sign_out.confirm_message" = "Installed apps stay on your device. To sign back in, you’ll need an activation code.";
+
+/* Follow */
+"follow.follow" = "Follow";
+"follow.following" = "Following";
+"follow.following_note" = "You follow this app";
+"follow.muted_note" = "Notifications off";
+"follow.mute" = "Turn off notifications";
+"follow.unmute" = "Turn on notifications";
+"follow.unfollow" = "Unfollow";
+"following.title" = "Following";
+"following.empty.title" = "No followed apps yet";
+"following.empty.message" = "Tap the bell on an app’s page to follow its updates.";
 
 /* Client update */
 "update.title" = "An update is ready";
