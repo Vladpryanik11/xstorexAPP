@@ -1,4 +1,4 @@
-# iStore — бэкенд (этап 1)
+# Xstore — backend (текущая реализация)
 
 Node.js 22 + TypeScript (ESM, strict), Fastify 5, zod, Drizzle ORM. В разработке и тестах база — PGlite (PostgreSQL в WASM, внутри процесса), в продакшене — PostgreSQL через `DATABASE_URL`. Docker и установленный Postgres не нужны.
 
@@ -84,7 +84,7 @@ src/
   db/                 schema.ts (Drizzle pg-core), index.ts (PGlite | pg + миграции)
   lib/                errors, etag, pagination, png, plist, ipa, range, i18n, crypto, validation
   storage/            BlobStorage (интерфейс, TODO S3) и LocalBlobStorage
-  signing/            SigningProvider и PreSignedProvider (IPA уже подписан → грант сразу ready)
+  signing/            SigningProvider и PreSignedProvider (сейчас без серверной подписи; полноценный signer — обязательная задача)
   modules/
     auth/             /app/activate (rate limit), /app/sign-out, Bearer-гарды
     client/           profile, store-state, version, events, push-token
@@ -116,7 +116,7 @@ curl -X POST -H "Authorization: Bearer $ADMIN_TOKEN" \
 
 ## OTA-установка на реальном устройстве
 
-iOS ставит приложение по `itms-services://` только если **манифест и IPA отдаются по HTTPS с валидным, доверенным сертификатом** (самоподписанный не подойдёт), а IPA подписан сертификатом владельца магазина (ad hoc с UDID устройства или Enterprise). Синтетические IPA из seed — просто zip для проверки цепочки до манифеста, на устройство они не встанут.
+iOS ставит приложение по `itms-services://`, если манифест и IPA отдаются по HTTPS с доверенным сертификатом, а IPA имеет действительную подпись и подходящий provisioning profile для устройства. Ad Hoc требует UDID; Enterprise — для сотрудников организации. Синтетические IPA из seed не устанавливаются: это тестовые zip-архивы.
 
 Варианты HTTPS:
 - туннель к локальному серверу (например, cloudflared или аналог), его адрес — в `PUBLIC_BASE_URL`;
@@ -124,7 +124,7 @@ iOS ставит приложение по `itms-services://` только ес�
 
 После смены `PUBLIC_BASE_URL` перезапустите сервер: все URL в ответах строятся из него.
 
-## Ограничения этапа 1
+## Технические особенности текущей версии
 
 - PGlite однопроцессный: для нескольких инстансов используйте PostgreSQL (`DATABASE_URL`).
 - Без `GRANT_SECRET` ссылки установки перестают работать после перезапуска.
