@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+backend/.data/
+backend/storage/
+backend/.scratch/
+# iOS
+ios/*.xcodeproj
+ios/*.xcworkspace
+ios/build/
+ios/DerivedData/
+xcuserdata/
+.DS_Store
+# никогда не коммитить чужие IPA и сертификаты
+*.ipa
+*.p12
+*.mobileprovision

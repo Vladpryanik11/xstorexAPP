@@ -1,0 +1,211 @@
+/* iStore — English */
+
+/* Brand */
+"brand.name" = "iStore";
+
+/* Common */
+"common.ok" = "OK";
+"common.cancel" = "Cancel";
+"common.close" = "Close";
+"common.retry" = "Try again";
+"common.refresh" = "Refresh";
+"common.loading" = "Loading…";
+"common.none" = "—";
+
+/* Tabs */
+"tab.today" = "Today";
+"tab.games" = "Games";
+"tab.apps" = "Apps";
+"tab.manager" = "Manager";
+"tab.search" = "Search";
+
+/* Activation */
+"activation.title" = "Welcome to iStore";
+"activation.subtitle" = "Two quick steps and the catalog is yours.";
+"activation.step1" = "Enter the code from your subscription email.";
+"activation.step2" = "Tap “Sign in” — this device will remember you.";
+"activation.code.placeholder" = "XXXX-XXXX-XXXX";
+"activation.code.label" = "Activation code";
+"activation.submit" = "Sign in";
+"activation.hint" = "No code yet? Get a subscription on the iStore website and we’ll email it to you.";
+"activation.error.invalid_code" = "We couldn’t find this code. Check it for typos and try again.";
+"activation.error.code_used" = "This code is already active on another device. Use a new code or contact support.";
+"activation.error.account_inactive" = "This account is paused. Renew your subscription or contact support.";
+"activation.error.generic" = "Couldn’t sign you in right now. Try again in a minute.";
+
+/* Gates: store closed */
+"store_closed.fallback_title" = "We’re taking a short break";
+"store_closed.fallback_message" = "The store is closed for maintenance. Your apps keep working.";
+"store_closed.return_caption" = "We’ll be back";
+"store_closed.back_in_format" = "in %@";
+"store_closed.back_at_format" = "We’ll be back at %@";
+"store_closed.back_soon" = "Any minute now";
+"store_closed.links_hint" = "Links open in your browser.";
+"store_closed.refresh" = "Check again";
+
+/* Gates: subscription */
+"subscription.title" = "Your subscription has ended";
+"subscription.message" = "Renew it to browse the catalog and install apps again. Everything you installed stays on your device.";
+"subscription.message_suspended" = "Your account is paused. Renew or contact support to get back in.";
+"subscription.expired_on_format" = "ended %@";
+"subscription.renew" = "Renew";
+"subscription.recheck" = "I’ve renewed";
+"subscription.still_inactive" = "Not active yet. If you just paid, wait a minute and try again.";
+
+/* Storefront */
+"storefront.loading" = "Loading the catalog…";
+"storefront.show_all" = "See all";
+"storefront.error.title" = "Couldn’t load the catalog";
+"storefront.empty.title" = "Nothing here yet";
+"storefront.empty.message" = "New apps are on their way. Pull down to refresh.";
+"room.fallback_title" = "Collection";
+"room.empty.title" = "This list is empty";
+"room.empty.message" = "Apps from this collection will show up here.";
+"badge.new" = "New";
+"badge.updated" = "Updated";
+
+/* App detail */
+"detail.error.title" = "Couldn’t open the app";
+"detail.unavailable.title" = "This app is no longer available";
+"detail.unavailable.message" = "It was removed from the catalog. Take a look at similar apps instead.";
+"detail.works_on_device" = "Works on this device";
+"detail.requires_ios_format" = "Requires iOS %@ or later";
+"detail.whats_new" = "What’s New";
+"detail.version_history" = "Version History";
+"detail.version_format" = "Version %@";
+"detail.information" = "Information";
+"detail.similar" = "You Might Also Like";
+"detail.more" = "more";
+"detail.less" = "less";
+"detail.screenshot_format" = "Screenshot %d of %d";
+"detail.stats.rating" = "Rating";
+"detail.stats.ratings_format" = "%@ ratings";
+"detail.stats.age" = "Age";
+"detail.stats.years" = "Years";
+"detail.stats.size" = "Size";
+"detail.stats.category" = "Category";
+"detail.stats.language" = "Language";
+"detail.stats.languages_more_format" = "+ %d more";
+"detail.info.developer" = "Developer";
+"detail.info.size" = "Size";
+"detail.info.category" = "Category";
+"detail.info.compatibility" = "Compatibility";
+"detail.info.languages" = "Languages";
+"detail.info.age" = "Age Rating";
+"detail.info.version" = "Version";
+"detail.info.released" = "Released";
+"detail.info.bundle_id" = "Bundle ID";
+"versions.title" = "Version History";
+"versions.empty.title" = "No versions yet";
+"versions.empty.message_format" = "%@ has no version history yet.";
+
+/* Install */
+"install.button.get" = "Get";
+"install.button.open" = "Open";
+"install.button.update" = "Update";
+"install.button.retry" = "Retry";
+"install.status.idle" = "Ready to install";
+"install.status.preparing" = "Preparing…";
+"install.status.ready" = "Almost ready…";
+"install.status.handing_off" = "Handing over to iOS…";
+"install.status.installing" = "iOS is installing — tap “Install” in the system prompt";
+"install.banner.title_more" = "%@ and %d more";
+"install.announcement_format" = "%@: %@";
+"install.cancel.title" = "Stop installing %@?";
+"install.cancel.message" = "You can start again anytime.";
+"install.cancel.keep" = "Keep going";
+"install.cancel.confirm" = "Stop";
+"install.incompatible.message_format" = "This app needs iOS %@ or later. Update iOS in Settings → General → Software Update.";
+"install.space.message_format" = "You need about %@ more free space. Free some up in Settings → General → Storage, or try anyway.";
+"install.space.install_anyway" = "Install anyway";
+"install.error.offline.title" = "You’re offline";
+"install.error.offline.message" = "Connect to Wi-Fi or mobile data and try again.";
+"install.error.expired.title" = "That took too long";
+"install.error.expired.message" = "The install link expired. Tap “Retry” to get a fresh one.";
+"install.error.unavailable.title" = "Not available right now";
+"install.error.unavailable.message" = "This app was removed or is temporarily unavailable. Try again later.";
+"install.error.no_build.title" = "This version isn’t ready yet";
+"install.error.no_build.message" = "We’re still uploading this build. Try again a bit later.";
+"install.error.account_inactive.title" = "Subscription needed";
+"install.error.account_inactive.message" = "Renew your subscription to install apps.";
+"install.error.url_missing.title" = "The install link isn’t ready";
+"install.error.url_missing.message" = "The server hasn’t prepared the app yet. Try again in a minute.";
+"install.error.launch_failed.title" = "iOS didn’t open the install prompt";
+"install.error.launch_failed.message" = "Make sure the app is allowed on this device, then try again.";
+"install.error.incompatible.title" = "Doesn’t work on this device";
+"install.error.incompatible.message" = "This app needs a newer iOS version. Update iOS and try again.";
+"install.error.space.title" = "Not enough space";
+"install.error.space.message" = "Free up some space in Settings → General → Storage and try again.";
+"install.error.generic.title" = "Something went wrong";
+"install.error.generic.message" = "We couldn’t prepare the app. Try again, and if it keeps happening, contact support.";
+
+/* Search */
+"search.placeholder" = "Apps, games and more";
+"search.idle.title" = "Find your next app";
+"search.idle.message" = "Search by name, description or developer.";
+"search.loading" = "Searching…";
+"search.history.clear" = "Clear recent searches";
+"search.corrected_format" = "Showing results for “%@”";
+"search.empty.title_format" = "Nothing found for “%@”";
+"search.empty.message" = "Check the spelling or ask us to add this app.";
+"search.request_format" = "Request “%@”";
+"search.request.sent.title" = "Thanks, request received";
+"search.request.sent.message" = "We’ll look into adding it to the catalog.";
+"search.error.title" = "Search isn’t available";
+
+/* Manager */
+"manager.empty.title" = "Your downloads will appear here";
+"manager.empty.message" = "Tap “Get” on any app and you’ll see its progress here.";
+"manager.section.downloads" = "Downloads";
+"manager.remove" = "Remove";
+
+/* Account */
+"account.title" = "Account";
+"account.default_name" = "My device";
+"account.section.subscription" = "Subscription";
+"account.section.device" = "This device";
+"account.plan" = "Plan";
+"account.status" = "Status";
+"account.status.active" = "Active";
+"account.status.expired" = "Expired";
+"account.status.suspended" = "Paused";
+"account.expires" = "Active until";
+"account.renew" = "Renew subscription";
+"account.device" = "Device";
+"account.device_format" = "%@, iOS %@";
+"account.install_id" = "Install ID";
+"account.install_id_format" = "•••• %@";
+"account.app_version" = "iStore version";
+"account.app_version_format" = "%@ (%@)";
+"account.sign_out" = "Sign out";
+"account.sign_out.confirm_title" = "Sign out of iStore?";
+"account.sign_out.confirm_message" = "Installed apps stay on your device. To sign back in, you’ll need an activation code.";
+
+/* Client update */
+"update.title" = "An update is ready";
+"update.mandatory.title" = "Time to update iStore";
+"update.version_format" = "Version %@";
+"update.hint" = "After you tap “Update”, iOS will ask you to confirm the install.";
+"update.mandatory.message" = "This version is no longer supported. Update to keep using the store.";
+"update.action" = "Update";
+"update.later" = "Not now";
+
+/* Errors */
+"error.offline.title" = "No internet connection";
+"error.offline.message" = "Check your Wi-Fi or mobile data and try again.";
+"error.timeout.title" = "The server is taking too long";
+"error.timeout.message" = "Try again in a moment.";
+"error.rate_limited.title" = "Too many attempts";
+"error.rate_limited.message" = "Wait a minute and try again.";
+"error.account_inactive.title" = "Subscription needed";
+"error.account_inactive.message" = "Your subscription has ended. Renew it to continue.";
+"error.not_found.title" = "Not found";
+"error.not_found.message" = "It may have been removed. Refresh and try again.";
+"error.server.title" = "Something broke on our side";
+"error.server.message" = "We’re on it. Try again in a few minutes.";
+"error.generic.title" = "Something went wrong";
+"error.generic.message" = "Try again. If it keeps happening, contact support.";
+
+/* Formats */
+"format.thousands" = "%@K";
+"format.millions" = "%@M";

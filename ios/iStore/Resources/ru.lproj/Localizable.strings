@@ -1,0 +1,211 @@
+/* iStore — русский */
+
+/* Бренд */
+"brand.name" = "iStore";
+
+/* Общее */
+"common.ok" = "ОК";
+"common.cancel" = "Отмена";
+"common.close" = "Закрыть";
+"common.retry" = "Повторить";
+"common.refresh" = "Обновить";
+"common.loading" = "Загрузка…";
+"common.none" = "—";
+
+/* Вкладки */
+"tab.today" = "Сегодня";
+"tab.games" = "Игры";
+"tab.apps" = "Приложения";
+"tab.manager" = "Менеджер";
+"tab.search" = "Поиск";
+
+/* Вход */
+"activation.title" = "Добро пожаловать в iStore";
+"activation.subtitle" = "Два коротких шага, и каталог ваш.";
+"activation.step1" = "Введите код из письма о подписке.";
+"activation.step2" = "Нажмите «Войти» — устройство вас запомнит.";
+"activation.code.placeholder" = "XXXX-XXXX-XXXX";
+"activation.code.label" = "Код активации";
+"activation.submit" = "Войти";
+"activation.hint" = "Кода ещё нет? Оформите подписку на сайте iStore — код придёт на почту.";
+"activation.error.invalid_code" = "Такого кода нет. Проверьте, нет ли опечатки, и попробуйте снова.";
+"activation.error.code_used" = "Этот код уже работает на другом устройстве. Возьмите новый код или напишите в поддержку.";
+"activation.error.account_inactive" = "Аккаунт приостановлен. Продлите подписку или напишите в поддержку.";
+"activation.error.generic" = "Сейчас не получилось войти. Попробуйте через минуту.";
+
+/* Шлюз: магазин закрыт */
+"store_closed.fallback_title" = "Мы ненадолго отошли";
+"store_closed.fallback_message" = "В магазине идут работы. Установленные приложения работают как обычно.";
+"store_closed.return_caption" = "Вернёмся";
+"store_closed.back_in_format" = "через %@";
+"store_closed.back_at_format" = "Вернёмся в %@";
+"store_closed.back_soon" = "Вот-вот";
+"store_closed.links_hint" = "Ссылки откроются в браузере.";
+"store_closed.refresh" = "Проверить снова";
+
+/* Шлюз: подписка */
+"subscription.title" = "Подписка закончилась";
+"subscription.message" = "Продлите её, чтобы снова смотреть каталог и ставить приложения. Всё установленное останется на устройстве.";
+"subscription.message_suspended" = "Аккаунт приостановлен. Продлите подписку или напишите в поддержку.";
+"subscription.expired_on_format" = "закончилась %@";
+"subscription.renew" = "Продлить";
+"subscription.recheck" = "Я продлил";
+"subscription.still_inactive" = "Пока не активна. Если вы только что оплатили, подождите минуту и попробуйте снова.";
+
+/* Витрина */
+"storefront.loading" = "Загружаем каталог…";
+"storefront.show_all" = "Показать все";
+"storefront.error.title" = "Каталог не загрузился";
+"storefront.empty.title" = "Пока пусто";
+"storefront.empty.message" = "Новые приложения уже в пути. Потяните вниз, чтобы обновить.";
+"room.fallback_title" = "Подборка";
+"room.empty.title" = "Список пуст";
+"room.empty.message" = "Здесь появятся приложения из этой подборки.";
+"badge.new" = "Новое";
+"badge.updated" = "Обновлено";
+
+/* Карточка приложения */
+"detail.error.title" = "Не удалось открыть приложение";
+"detail.unavailable.title" = "Это приложение больше недоступно";
+"detail.unavailable.message" = "Его убрали из каталога. Загляните в похожие.";
+"detail.works_on_device" = "Работает на этом устройстве";
+"detail.requires_ios_format" = "Нужна iOS %@ или новее";
+"detail.whats_new" = "Что нового";
+"detail.version_history" = "История версий";
+"detail.version_format" = "Версия %@";
+"detail.information" = "Информация";
+"detail.similar" = "Вам может понравиться";
+"detail.more" = "ещё";
+"detail.less" = "свернуть";
+"detail.screenshot_format" = "Снимок экрана %d из %d";
+"detail.stats.rating" = "Рейтинг";
+"detail.stats.ratings_format" = "Оценок: %@";
+"detail.stats.age" = "Возраст";
+"detail.stats.years" = "Лет";
+"detail.stats.size" = "Размер";
+"detail.stats.category" = "Категория";
+"detail.stats.language" = "Язык";
+"detail.stats.languages_more_format" = "+ ещё %d";
+"detail.info.developer" = "Разработчик";
+"detail.info.size" = "Размер";
+"detail.info.category" = "Категория";
+"detail.info.compatibility" = "Совместимость";
+"detail.info.languages" = "Языки";
+"detail.info.age" = "Возраст";
+"detail.info.version" = "Версия";
+"detail.info.released" = "Выпущено";
+"detail.info.bundle_id" = "Bundle ID";
+"versions.title" = "История версий";
+"versions.empty.title" = "Версий пока нет";
+"versions.empty.message_format" = "У «%@» пока нет истории версий.";
+
+/* Установка */
+"install.button.get" = "Загрузить";
+"install.button.open" = "Открыть";
+"install.button.update" = "Обновить";
+"install.button.retry" = "Повторить";
+"install.status.idle" = "Можно устанавливать";
+"install.status.preparing" = "Подготовка…";
+"install.status.ready" = "Почти готово…";
+"install.status.handing_off" = "Передаём в iOS…";
+"install.status.installing" = "iOS устанавливает — нажмите «Установить» в системном окне";
+"install.banner.title_more" = "%@ и ещё %d";
+"install.announcement_format" = "%@: %@";
+"install.cancel.title" = "Остановить установку «%@»?";
+"install.cancel.message" = "Начать заново можно в любой момент.";
+"install.cancel.keep" = "Продолжить";
+"install.cancel.confirm" = "Остановить";
+"install.incompatible.message_format" = "Приложению нужна iOS %@ или новее. Обновите iOS в Настройках → Основные → Обновление ПО.";
+"install.space.message_format" = "Нужно ещё примерно %@ свободного места. Освободите его в Настройках → Основные → Хранилище или попробуйте всё равно.";
+"install.space.install_anyway" = "Всё равно установить";
+"install.error.offline.title" = "Нет интернета";
+"install.error.offline.message" = "Подключитесь к Wi-Fi или мобильной сети и попробуйте снова.";
+"install.error.expired.title" = "Слишком долго";
+"install.error.expired.message" = "Ссылка на установку истекла. Нажмите «Повторить», и мы выдадим новую.";
+"install.error.unavailable.title" = "Сейчас недоступно";
+"install.error.unavailable.message" = "Приложение убрали или оно временно недоступно. Попробуйте позже.";
+"install.error.no_build.title" = "Эта версия ещё не готова";
+"install.error.no_build.message" = "Мы ещё загружаем сборку. Загляните чуть позже.";
+"install.error.account_inactive.title" = "Нужна подписка";
+"install.error.account_inactive.message" = "Продлите подписку, чтобы ставить приложения.";
+"install.error.url_missing.title" = "Ссылка на установку не готова";
+"install.error.url_missing.message" = "Сервер ещё готовит приложение. Попробуйте через минуту.";
+"install.error.launch_failed.title" = "iOS не открыла окно установки";
+"install.error.launch_failed.message" = "Проверьте, что приложение разрешено на этом устройстве, и попробуйте снова.";
+"install.error.incompatible.title" = "Не работает на этом устройстве";
+"install.error.incompatible.message" = "Приложению нужна более новая iOS. Обновите систему и попробуйте снова.";
+"install.error.space.title" = "Не хватает места";
+"install.error.space.message" = "Освободите место в Настройках → Основные → Хранилище и попробуйте снова.";
+"install.error.generic.title" = "Что-то пошло не так";
+"install.error.generic.message" = "Не получилось подготовить приложение. Попробуйте ещё раз, а если не выйдет — напишите в поддержку.";
+
+/* Поиск */
+"search.placeholder" = "Приложения, игры и не только";
+"search.idle.title" = "Найдите новое приложение";
+"search.idle.message" = "Ищите по названию, описанию или разработчику.";
+"search.loading" = "Ищем…";
+"search.history.clear" = "Очистить недавние";
+"search.corrected_format" = "Показаны результаты для «%@»";
+"search.empty.title_format" = "По запросу «%@» ничего нет";
+"search.empty.message" = "Проверьте написание или попросите нас добавить приложение.";
+"search.request_format" = "Запросить «%@»";
+"search.request.sent.title" = "Спасибо, запрос получен";
+"search.request.sent.message" = "Посмотрим, можно ли добавить его в каталог.";
+"search.error.title" = "Поиск недоступен";
+
+/* Менеджер */
+"manager.empty.title" = "Ваши загрузки появятся здесь";
+"manager.empty.message" = "Нажмите «Загрузить» у любого приложения — здесь будет видно, как идёт установка.";
+"manager.section.downloads" = "Загрузки";
+"manager.remove" = "Убрать";
+
+/* Аккаунт */
+"account.title" = "Аккаунт";
+"account.default_name" = "Моё устройство";
+"account.section.subscription" = "Подписка";
+"account.section.device" = "Это устройство";
+"account.plan" = "План";
+"account.status" = "Статус";
+"account.status.active" = "Активна";
+"account.status.expired" = "Закончилась";
+"account.status.suspended" = "Приостановлена";
+"account.expires" = "Действует до";
+"account.renew" = "Продлить подписку";
+"account.device" = "Устройство";
+"account.device_format" = "%@, iOS %@";
+"account.install_id" = "ID установки";
+"account.install_id_format" = "•••• %@";
+"account.app_version" = "Версия iStore";
+"account.app_version_format" = "%@ (%@)";
+"account.sign_out" = "Выйти";
+"account.sign_out.confirm_title" = "Выйти из iStore?";
+"account.sign_out.confirm_message" = "Установленные приложения останутся на устройстве. Чтобы войти снова, понадобится код активации.";
+
+/* Обновление клиента */
+"update.title" = "Готово обновление";
+"update.mandatory.title" = "Пора обновить iStore";
+"update.version_format" = "Версия %@";
+"update.hint" = "После «Обновить» iOS попросит подтвердить установку.";
+"update.mandatory.message" = "Эта версия больше не поддерживается. Обновитесь, чтобы пользоваться магазином.";
+"update.action" = "Обновить";
+"update.later" = "Не сейчас";
+
+/* Ошибки */
+"error.offline.title" = "Нет подключения к интернету";
+"error.offline.message" = "Проверьте Wi-Fi или мобильную сеть и попробуйте снова.";
+"error.timeout.title" = "Сервер долго не отвечает";
+"error.timeout.message" = "Попробуйте ещё раз через минуту.";
+"error.rate_limited.title" = "Слишком много попыток";
+"error.rate_limited.message" = "Подождите минуту и попробуйте снова.";
+"error.account_inactive.title" = "Нужна подписка";
+"error.account_inactive.message" = "Подписка закончилась. Продлите её, чтобы продолжить.";
+"error.not_found.title" = "Не нашли";
+"error.not_found.message" = "Возможно, это уже убрали. Обновите и попробуйте снова.";
+"error.server.title" = "У нас что-то сломалось";
+"error.server.message" = "Уже чиним. Попробуйте через несколько минут.";
+"error.generic.title" = "Что-то пошло не так";
+"error.generic.message" = "Попробуйте ещё раз. Если не поможет — напишите в поддержку.";
+
+/* Форматы */
+"format.thousands" = "%@ тыс.";
+"format.millions" = "%@ млн";
