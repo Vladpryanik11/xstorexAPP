@@ -64,7 +64,8 @@ const invalidIpa = (detail: string) =>
   new AppError(400, 'invalid_ipa', { en: `Invalid IPA: ${detail}`, ru: `Некорректный IPA: ${detail}` });
 
 /**
- * Registers an already-signed IPA located at `filePath` (the file is moved into storage).
+ * Registers an uploaded IPA at `filePath` (the file is moved into storage).
+ * This method does not sign the file; server-side signing is a separate required feature.
  * Version/bundle id come from Payload/*.app/Info.plist; form fields must agree with it.
  */
 export async function addBuildFromFile(
