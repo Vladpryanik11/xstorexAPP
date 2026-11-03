@@ -4,6 +4,8 @@
 
 | Папка | Что внутри |
 |---|---|
+| [docs/HANDOFF.md](docs/HANDOFF.md) | Текущее состояние, решения, план — начинать отсюда |
+| [CLAUDE.md](CLAUDE.md) | Инструкции для Claude Code: команды, среда, конвенции, грабли |
 | [docs/SPEC.md](docs/SPEC.md) | ТЗ: решения, этапы, визуальный стиль, архитектура |
 | [docs/API.md](docs/API.md) | Контракт API v1, общий для бэкенда и клиента |
 | [backend/](backend/) | Node.js 22 + TypeScript, Fastify, Drizzle, PostgreSQL / PGlite |
