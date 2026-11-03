@@ -1,6 +1,6 @@
 import type { SigningProvider, SigningRequest, SigningResult } from './signing-provider.js';
 
-/** The uploaded IPA is already signed by the store owner: the grant is ready immediately. */
+/** Existing mode: return an uploaded IPA as-is. This provider does not sign or validate its code signature. */
 export class PreSignedProvider implements SigningProvider {
   readonly name = 'presigned';
 
