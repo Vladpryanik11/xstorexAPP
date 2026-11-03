@@ -35,8 +35,8 @@ jobs:
       - name: Check localization keys
         run: node scripts/check-l10n.mjs
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
+      - name: Install XcodeGen and xcbeautify
+        run: brew install xcodegen xcbeautify
 
       - name: Generate project
         run: xcodegen generate
@@ -76,7 +76,23 @@ jobs:
             -destination "id=${{ steps.simulator.outputs.udid }}" \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO \
-            | tee xcodebuild.log
+            | tee xcodebuild.log \
+            | xcbeautify --renderer github-actions
+
+      # Логи Actions видны только после входа в GitHub, а аннотации отдаются публичным API.
+      # Поэтому ошибки компиляции и упавшие тесты дублируются аннотациями по 8 строк.
+      - name: Report build errors as annotations
+        if: failure()
+        run: |
+          [ -f xcodebuild.log ] || exit 0
+          grep -E "error:|\*\* (BUILD|TEST) FAILED|Testing failed|' failed \(|XCTAssert" xcodebuild.log \
+            | sed 's|.*/ios/||' | awk '!seen[$0]++' | head -40 > errors.txt || true
+          split -l 8 errors.txt chunk_
+          for f in chunk_*; do
+            [ -f "$f" ] || continue
+            msg=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' "$f" | awk 'BEGIN{ORS="%0A"} {print}')
+            echo "::error title=xcodebuild::${msg}"
+          done
 
       - name: Upload test results
         if: failure()

@@ -1,7 +1,8 @@
-node_modules/
-dist/
-.data/
-storage/
-.scratch/
-.env
+# пути от корня backend/: без «/» в начале под правило попадали бы и src/storage
+/node_modules/
+/dist/
+/.data/
+/storage/
+/.scratch/
+/.env
 *.log
