@@ -1,7 +1,7 @@
 import UIKit
 
-/// «Менеджер» этапа 1: активные установки из `InstallService` и пустое состояние.
-/// Импорт своих IPA появится на этапе 2.
+/// Текущий «Менеджер»: список активных установок из `InstallService` и пустое состояние.
+/// Импорт IPA, включая сторонние и модифицированные сборки, — обязательная задача разработки.
 final class ManagerViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private let installService: InstallService
     private weak var router: AppRouting?
