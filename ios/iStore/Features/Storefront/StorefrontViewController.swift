@@ -23,7 +23,7 @@ final class StorefrontViewController: UIViewController, UICollectionViewDelegate
         case failed(APIError)
     }
 
-    private let tab: StorefrontTab
+    private let storefrontTab: StorefrontTab
     private let catalog: CatalogServicing
     private let live: CatalogLiveObserving
     private let installService: InstallService
@@ -47,7 +47,7 @@ final class StorefrontViewController: UIViewController, UICollectionViewDelegate
         installService: InstallService,
         router: AppRouting
     ) {
-        self.tab = tab
+        self.storefrontTab = tab
         self.catalog = catalog
         self.live = live
         self.installService = installService
@@ -201,7 +201,7 @@ final class StorefrontViewController: UIViewController, UICollectionViewDelegate
         loadTask = Task { [weak self] in
             guard let self = self else { return }
             do {
-                let response = try await self.catalog.groupings(tab: self.tab)
+                let response = try await self.catalog.groupings(tab: self.storefrontTab)
                 await self.live.noteRevision(response.revision)
                 self.setRooms(response.rooms)
                 self.loadState = .loaded
