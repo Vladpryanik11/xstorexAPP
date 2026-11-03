@@ -1,4 +1,4 @@
-# Деплой бэкенда iStore на VPS
+# Деплой backend Xstore на VPS
 
 Сервер поднимается одной командой Docker Compose: бэкенд, PostgreSQL и Caddy. Caddy сам выпускает и продлевает сертификат Let's Encrypt.
 
@@ -62,7 +62,7 @@ curl -s -X POST -H "$H" -H 'Content-Type: application/json' -d '{
   "icon_url":"https://example.com/icon.png","tint_light":"#0041DC","tint_dark":"#6AA2E3","bg_color":"#EAF1FF",
   "description":{"en":"…","ru":"…"},"min_os":"15.0","published":true}' $A/apps
 
-# сборка: IPA, уже подписанный вашим сертификатом
+# текущий backend принимает IPA без серверной подписи; полноценный signer — обязательная задача Xstore
 curl -s -X POST -H "$H" -F ipa=@MyApp.ipa -F version=1.0.0 -F build=1 -F notes='Первая версия' $A/apps/app_myapp/builds
 
 # витрина вкладки «Приложения»
@@ -80,7 +80,7 @@ iOS ставит IPA вне App Store только на устройства, к
 - **Ad Hoc / Development** — устройства, чьи UDID зарегистрированы в вашем аккаунте Apple Developer (до 100 iPhone в год на аккаунт). В профиль этого IPA нужно включить UDID устройства и переподписать IPA после добавления нового устройства.
 - **Enterprise** — любые устройства, но только сотрудники вашей организации.
 
-Это относится и к самому iStore, и к каждому приложению в каталоге.
+Это относится к существующему нативному клиенту iStore и к каждому приложению в каталоге.
 
 ## Обновление
 
