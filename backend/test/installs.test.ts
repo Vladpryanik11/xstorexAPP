@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { parse as parsePlist } from 'plist';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { clientEvents, installs } from '../src/db/schema.js';
-import { BASE_URL, bearer, createTestEnv, json, type TestEnv } from './helpers.js';
+import { admin, BASE_URL, bearer, createTestEnv, json, type TestEnv } from './helpers.js';
 
 describe('installs', () => {
   let env: TestEnv;
@@ -126,6 +126,27 @@ describe('installs', () => {
     expect((await env.app.inject({ url: `${ipaPath}?${new URL(g.manifest_url).searchParams}` })).statusCode).toBe(401);
     const polled = json(await env.app.inject({ url: `/api/v1/catalog/installs/${g.install_id}`, headers: auth }));
     expect(polled).toMatchObject({ status: 'failed', error_code: 'grant_expired', manifest_url: null, itms_url: null });
+  });
+
+  it('stops serving the IPA once the app is unpublished, even with a valid grant', async () => {
+    const g = json(await createGrant('app_tilegrove'));
+    const ipaUrl = pathOf(g.manifest_url).replace('manifest.plist', 'app.ipa');
+    expect((await env.app.inject({ method: 'HEAD', url: ipaUrl })).statusCode).toBe(200);
+
+    const unpublish = await env.app.inject({ method: 'DELETE', url: '/admin/v1/apps/app_tilegrove', headers: admin() });
+    expect(unpublish.statusCode).toBe(204);
+    expect((await env.app.inject({ url: ipaUrl })).statusCode).toBe(404);
+    expect((await env.app.inject({ method: 'HEAD', url: ipaUrl })).statusCode).toBe(404);
+    expect((await env.app.inject({ url: pathOf(g.manifest_url) })).statusCode).toBe(404);
+
+    const republish = await env.app.inject({
+      method: 'PATCH',
+      url: '/admin/v1/apps/app_tilegrove',
+      headers: admin(),
+      payload: { published: true },
+    });
+    expect(republish.statusCode).toBe(200);
+    expect((await env.app.inject({ method: 'HEAD', url: ipaUrl })).statusCode).toBe(200);
   });
 
   it('errors: 409 no_build, 404 unknown app or version-less app, 401 without token', async () => {

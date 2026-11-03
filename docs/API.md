@@ -128,7 +128,7 @@
 
 Сервер отправляет уведомления через APNs, если заданы `APNS_KEY_ID`, `APNS_TEAM_ID` и `APNS_KEY_BASE64` (`deploy/README.md`). Без них push выключен, остальное работает.
 
-**Обновление приложения.** Отправляется, когда в админке загружен билд с версией выше текущей (`3.2.1` > `3.2.0`, тот же номер или откат — без push). Получатели — устройства подписчиков без `muted`, с активной подпиской, выполненным входом и push-токеном. Язык текста — по `locale` из `/client/push-token`.
+**Обновление приложения.** Отправляется, когда в админке загружен билд с версией выше текущей и всех загруженных ранее (`3.2.1` > `3.2.0`; тот же номер или старый билд в историю — без push). Текст после версии — `notes` этого билда, без них только «Вышла версия 3.2.1». Получатели — устройства подписчиков без `muted`, с активной подпиской, выполненным входом и push-токеном. Язык текста — по `locale` из `/client/push-token`.
 
 ```jsonc
 {
@@ -165,7 +165,7 @@
   "app_id": "app_…" | null, "app": AppSummary | null }
 ```
 
-**SSE `/catalog/stream`**: `Content-Type: text/event-stream`. Каждое событие несёт `id: <revision>`; клиент переподключается с `Last-Event-ID` или `?since=`.
+**SSE `/catalog/stream`**: `Content-Type: text/event-stream`. Каждое событие несёт `id: <revision>`; клиент переподключается с `?since=` или `Last-Event-ID` (если пришли оба, сервер берёт `Last-Event-ID`). iOS-клиент шлёт только `since`: его курсор двигается и по `/catalog/changes`, а id событий SSE после догона отстаёт.
 - `event: hello` / `data: {"revision": 45}` — сразу после подключения;
 - `event: change` / `data: Change` — по одному на изменение (сначала догоняющие с `since`);
 - `event: reset` / `data: {"revision": 45}` — клиент перечитывает витрину;
@@ -186,7 +186,7 @@
 | `POST /catalog/installs` 🔒 | `{"app_id": "…", "version": "3.2.0" \| null}` → `201 InstallGrant`. Ошибки: `404 not_found`, `403 account_inactive`, `409 no_build` (нет IPA для версии) |
 | `GET /catalog/installs/{install_id}` 🔒 | `InstallGrant` (для опроса, пока `status = preparing`) |
 | `GET /catalog/installs/{install_id}/manifest.plist?t=<token>` (публичный, по токену гранта) | XML-манифест OTA (`items[0].assets`: `software-package`, `display-image`, `full-size-image`; `metadata`: `bundle-identifier`, `bundle-version`, `kind=software`, `title`) |
-| `GET /catalog/installs/{install_id}/app.ipa?t=<token>` (публичный, по токену гранта) | IPA, поддерживает `Range` |
+| `GET /catalog/installs/{install_id}/app.ipa?t=<token>` (публичный, по токену гранта) | IPA, поддерживает `Range`. Если приложение сняли с публикации, отвечает `404` и по действующему гранту, как и манифест |
 | `POST /catalog/installs/{install_id}/events` 🔒 | `{"stage": "preparing" \| "ready" \| "handing_off" \| "installing" \| "failed", "error_code": "…" \| null}` → `204` |
 
 ```jsonc
@@ -229,7 +229,7 @@
 | Метод и путь | Назначение |
 |---|---|
 | `POST /apps`, `PATCH /apps/{id}`, `DELETE /apps/{id}` | CRUD приложений (DELETE = снять с публикации). Каждое изменение увеличивает ревизию |
-| `POST /apps/{id}/builds` (multipart: `ipa`, поля `version`, `build`, `notes`) | Загрузка уже подписанного IPA. Сервер считает `sha256` и `size_bytes`, достаёт `CFBundleIdentifier` и `CFBundleShortVersionString` из `Info.plist` внутри IPA |
+| `POST /apps/{id}/builds` (multipart: `ipa`, поля `version`, `build`, `notes`) | Загрузка уже подписанного IPA. Сервер считает `sha256` и `size_bytes`, достаёт `CFBundleIdentifier` и `CFBundleShortVersionString` из `Info.plist` внутри IPA. Карточка (`version`, `size_bytes`, `min_os`, `whats_new`) обновляется, только если версия не ниже уже загруженных; более старый билд ложится в историю версий. У новой версии без `notes` прежнее «Что нового» убирается |
 | `PUT /storefront/{tab}` | Полная замена комнат вкладки: `{"rooms": [{"id", "style", "title", "subtitle", "app_ids": [], "hero": [], "category_ids": []}]}` |
 | `POST /activation-codes` | `{"count": 10, "plan_id": "month"}` → `{"codes": ["ABCD-EFGH-JKLM", …]}` |
 | `PUT /store-state` | `{"state": "open" \| "closed", "closed": {…}}` |

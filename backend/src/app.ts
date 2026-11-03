@@ -80,7 +80,7 @@ export function createContext(
     db: database.db,
     storage: deps.storage ?? new LocalBlobStorage(config.storageDir),
     signing: deps.signing ?? new PreSignedProvider(),
-    bus: new CatalogBus(database.db),
+    bus: new CatalogBus(database.db, deps.log ?? null),
     push: new PushNotifier(database.db, sender, deps.log ?? SILENT_LOG),
     now: deps.now ?? (() => new Date()),
     ...createUrlHelpers(config.publicBaseUrl),

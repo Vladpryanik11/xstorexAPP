@@ -90,7 +90,9 @@ actor APIClient: APIClientProtocol {
         if canUseETag, let cached = etagCache[cacheKey] {
             request.setValue(cached.etag, forHTTPHeaderField: "If-None-Match")
         }
-        let sentToken = request.value(forHTTPHeaderField: "Authorization") != nil
+        let sentToken = request.value(forHTTPHeaderField: "Authorization").flatMap { header in
+            header.hasPrefix("Bearer ") ? String(header.dropFirst("Bearer ".count)) : nil
+        }
 
         let result: (Data, URLResponse)
         do {
@@ -123,14 +125,17 @@ actor APIClient: APIClientProtocol {
             body: data,
             retryAfterHeader: http.value(forHTTPHeaderField: "Retry-After")
         )
-        if error == .unauthorized, endpoint.requiresAuth, sentToken {
-            etagCache.removeAll()
-            await tokenStore.clear()
-            if let handler = unauthorizedHandler {
-                await handler()
+        if error == .unauthorized, endpoint.requiresAuth, let sentToken = sentToken {
+            // 401 на старый токен не разлогинивает, если пока шёл запрос выдали новый (повторная активация).
+            let cleared = await tokenStore.clear(ifEqualTo: sentToken)
+            if cleared {
+                etagCache.removeAll()
+                if let handler = unauthorizedHandler {
+                    await handler()
+                }
             }
         }
-        if error == .accountInactive, endpoint.requiresAuth, sentToken, let handler = accountInactiveHandler {
+        if error == .accountInactive, endpoint.requiresAuth, sentToken != nil, let handler = accountInactiveHandler {
             await handler()
         }
         report(path: endpoint.path, error: error)

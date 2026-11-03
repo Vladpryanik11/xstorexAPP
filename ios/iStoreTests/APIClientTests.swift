@@ -68,6 +68,37 @@ final class MockURLProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+/// Первый `token()` отдаёт старый токен (он уходит в запрос), дальше хранится уже новый:
+/// так выглядит повторная активация, случившаяся, пока запрос был в пути.
+actor ReplacingTokenStore: TokenStoring {
+    private let sent: String
+    private var value: String?
+    private var didSend = false
+
+    init(sent: String, replacement: String) {
+        self.sent = sent
+        self.value = replacement
+    }
+
+    func token() -> String? {
+        if !didSend {
+            didSend = true
+            return sent
+        }
+        return value
+    }
+
+    func save(_ token: String) { value = token }
+    func clear() { value = nil }
+
+    func clear(ifEqualTo token: String) -> Bool {
+        guard let current = value else { return true }
+        guard current == token else { return false }
+        value = nil
+        return true
+    }
+}
+
 /// Флаг, который можно выставить из `@Sendable`-колбэка.
 actor CallCounter {
     private(set) var count = 0
@@ -142,6 +173,38 @@ final class APIClientTests: XCTestCase {
         XCTAssertNil(token)
         let calls = await counter.count
         XCTAssertEqual(calls, 1)
+    }
+
+    func test401ForReplacedTokenKeepsNewToken() async {
+        let store = ReplacingTokenStore(sent: "tok_old", replacement: "tok_new")
+        let identity = ClientIdentity(
+            baseURL: URL(string: "http://localhost:8080")!,
+            language: "ru",
+            build: "42",
+            installId: "install-uuid"
+        )
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let replacingClient = APIClient(identity: identity, tokenStore: store, session: URLSession(configuration: configuration))
+        let counter = CallCounter()
+        await replacingClient.setUnauthorizedHandler {
+            await counter.increment()
+        }
+        MockURLProtocol.store.enqueue(.init(
+            status: 401,
+            body: #"{"error":{"code":"unauthorized","message":"Нужен вход"}}"#
+        ))
+        do {
+            _ = try await replacingClient.send(Endpoint<ClientProfile>(path: "/client/profile"))
+            XCTFail("Ожидалась ошибка")
+        } catch {
+            XCTAssertEqual(error as? APIError, .unauthorized)
+        }
+        XCTAssertEqual(MockURLProtocol.store.recorded.first?.value(forHTTPHeaderField: "Authorization"), "Bearer tok_old")
+        let token = await store.token()
+        XCTAssertEqual(token, "tok_new", "Ответ на старый токен не стирает выданный после него")
+        let calls = await counter.count
+        XCTAssertEqual(calls, 0)
     }
 
     func test401GrantExpiredKeepsToken() async {

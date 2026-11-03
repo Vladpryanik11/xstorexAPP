@@ -107,7 +107,13 @@ export async function addBuildFromFile(
   await ctx.storage.putFile(blobKey, filePath);
   const now = ctx.now();
   try {
-    const row = await ctx.db.transaction(async (tx) => {
+    const { row, notify } = await ctx.db.transaction(async (tx) => {
+      const [current] = await tx.select().from(apps).where(eq(apps.id, appId)).for('update');
+      if (!current) throw notFound();
+      const previous = await tx.select({ version: appBuilds.version }).from(appBuilds).where(eq(appBuilds.appId, appId));
+      // Сборка в историю (старше уже загруженных) карточку приложения не меняет.
+      const latest = previous.every((b) => compareVersions(version, b.version) >= 0);
+      const newVersion = latest && compareVersions(version, current.version) !== 0;
       const [created] = await tx
         .insert(appBuilds)
         .values({
@@ -130,19 +136,24 @@ export async function addBuildFromFile(
       await tx
         .update(apps)
         .set({
-          version,
-          sizeBytes: digest.size,
-          bundleId: app.bundleId ?? info.bundleId,
-          ...(info.minOs && /^\d{1,2}(\.\d{1,2}){0,2}$/.test(info.minOs) ? { minOs: info.minOs } : {}),
-          ...(fields.notes ? { whatsNewEn: fields.notes, whatsNewRu: fields.notes_ru ?? null } : {}),
+          bundleId: current.bundleId ?? info.bundleId,
+          ...(latest
+            ? {
+                version,
+                sizeBytes: digest.size,
+                ...(info.minOs && /^\d{1,2}(\.\d{1,2}){0,2}$/.test(info.minOs) ? { minOs: info.minOs } : {}),
+                // «Что нового» относится к версии: у новой версии без notes прежний текст убирается.
+                ...(fields.notes || newVersion ? { whatsNewEn: fields.notes || null, whatsNewRu: fields.notes_ru || null } : {}),
+              }
+            : {}),
           updatedAt: now,
         })
         .where(eq(apps.id, appId));
-      await recordChanges(tx, [{ kind: app.published ? 'app_upsert' : 'app_removed', appId }], ctx.config.catalogJournalLimit);
-      return created;
+      await recordChanges(tx, [{ kind: current.published ? 'app_upsert' : 'app_removed', appId }], ctx.config.catalogJournalLimit);
+      return { row: created, notify: current.published && latest && compareVersions(version, current.version) > 0 };
     });
     await ctx.bus.notify();
-    if (app.published && compareVersions(version, app.version) > 0) notifyAppUpdate(ctx, appId);
+    if (notify) notifyAppUpdate(ctx, appId);
     return row;
   } catch (err) {
     await ctx.storage.delete(blobKey).catch(() => undefined);

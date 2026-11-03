@@ -183,6 +183,8 @@ describe('app update notifications', () => {
     });
   };
   const sentTokens = () => sender.sent.map((m) => m.token).sort();
+  const card = async () =>
+    json(await env.app.inject({ url: '/api/v1/catalog/apps/app_quillstack', headers: bearer(env.token) }));
 
   beforeAll(async () => {
     env = await createTestEnv({}, { push: sender });
@@ -240,6 +242,17 @@ describe('app update notifications', () => {
     expect((await upload('3.2.5', '325')).statusCode).toBe(201);
     await env.ctx.push.drain();
     expect(sender.sent).toEqual([]);
+    // Сборка в историю не откатывает карточку, пересборка той же версии не стирает «Что нового».
+    expect(await card()).toMatchObject({ version: '3.3.0', whats_new: 'Faster sync' });
+  });
+
+  it('a new version without notes drops the previous notes', async () => {
+    sender.sent = [];
+    expect((await upload('3.3.5', '335')).statusCode).toBe(201);
+    await env.ctx.push.drain();
+    const ru = sender.sent.find((m) => m.token === APNS_TOKENS.ru)!;
+    expect(ru.payload).toMatchObject({ aps: { alert: { body: 'Вышла версия 3.3.5' } }, version: '3.3.5' });
+    expect(await card()).toMatchObject({ version: '3.3.5', whats_new: null });
   });
 
   it('removes dead tokens and skips expired accounts', async () => {

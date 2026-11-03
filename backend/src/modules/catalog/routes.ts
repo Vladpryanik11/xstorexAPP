@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../../context.js';
 import { appBuilds, apps, categories } from '../../db/schema.js';
@@ -12,7 +12,7 @@ import { parseInput } from '../../lib/validation.js';
 import type { Guard } from '../auth/guard.js';
 import { presentChanges } from './changes.js';
 import { buildCatalogApp, iso, loadPublished, toSummary } from './present.js';
-import { getRevision, getRevisionInfo, listChanges } from './revision.js';
+import { getRevisionInfo, listChanges, type RevisionInfo } from './revision.js';
 import { registerCatalogStream } from './sse.js';
 import { buildRooms, roomApps, TABS } from './storefront.js';
 
@@ -23,6 +23,18 @@ const changesQuery = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(100),
 });
 
+declare module 'fastify' {
+  interface FastifyRequest {
+    catalogRevision: RevisionInfo | null;
+  }
+}
+
+/** Ревизия, прочитанная хуком в начале запроса. */
+function revisionOf(req: FastifyRequest): RevisionInfo {
+  if (!req.catalogRevision) throw new Error('catalog revision hook did not run');
+  return req.catalogRevision;
+}
+
 export async function catalogRoutes(
   app: FastifyInstance,
   opts: { ctx: AppContext; guards: { requireActive: Guard }; sseConnections: Set<ServerResponse> },
@@ -30,15 +42,17 @@ export async function catalogRoutes(
   const { ctx, guards } = opts;
   const guard = guards.requireActive;
 
-  // All catalog responses carry the current revision.
-  app.addHook('preHandler', async (_req, reply) => {
-    void reply.header('x-catalog-revision', String(await getRevision(ctx.db)));
+  // Все ответы каталога несут текущую ревизию; обработчики берут её отсюда, а не читают заново.
+  app.decorateRequest('catalogRevision', null);
+  app.addHook('preHandler', async (req, reply) => {
+    req.catalogRevision = await getRevisionInfo(ctx.db);
+    void reply.header('x-catalog-revision', String(req.catalogRevision.revision));
   });
 
   app.get('/groupings', { onRequest: guard }, async (req, reply) => {
     const { tab } = parseInput(z.object({ tab: z.enum(TABS) }), req.query, 'query');
     const lang = resolveLang(req.headers['accept-language']);
-    const revision = await getRevision(ctx.db);
+    const { revision } = revisionOf(req);
     const rooms = await buildRooms(ctx, tab, lang);
     return sendJsonWithEtag(req, reply, { tab, revision, rooms });
   });
@@ -121,9 +135,8 @@ export async function catalogRoutes(
   app.get('/catalog/changes', { onRequest: guard }, async (req, reply) => {
     const q = parseInput(changesQuery, req.query, 'query');
     const lang = resolveLang(req.headers['accept-language']);
-    const info = await getRevisionInfo(ctx.db);
+    const info = revisionOf(req);
     void reply.header('cache-control', 'no-cache');
-    void reply.header('x-catalog-revision', String(info.revision));
     if (q.since < info.floor || q.since > info.revision) {
       return { revision: info.revision, changes: [], has_more: false, reset: true };
     }
@@ -137,5 +150,6 @@ export async function catalogRoutes(
     };
   });
 
+  // Поток читает ревизию сам, уже после подписки на шину.
   registerCatalogStream(app, ctx, guard, opts.sseConnections);
 }

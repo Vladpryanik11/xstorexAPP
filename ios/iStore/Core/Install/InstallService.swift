@@ -217,6 +217,10 @@ final class InstallService {
         }
 
         if grant.status == .failed {
+            // Истёкший грант опрос возвращает со статусом `failed`, а не ошибкой 401: `run` попросит новый.
+            if grant.errorCode == APIError.grantExpired.code {
+                throw APIError.grantExpired
+            }
             fail(app, installId: grant.installId, code: grant.errorCode ?? "server_job_failed")
             return
         }
@@ -233,6 +237,8 @@ final class InstallService {
         report(installId: grant.installId, stage: .handingOff, errorCode: nil, app: app)
         try Task.checkCancellation()
         let opened = await opener.open(itmsURL)
+        // Пока iOS открывала ссылку, установку могли отменить: тогда она не должна вернуться в список.
+        try Task.checkCancellation()
         guard opened else {
             fail(app, installId: grant.installId, code: InstallErrorCode.launchFailed)
             return

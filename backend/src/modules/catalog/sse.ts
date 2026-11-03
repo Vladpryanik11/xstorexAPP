@@ -7,7 +7,7 @@ import { parseInput } from '../../lib/validation.js';
 import type { Guard } from '../auth/guard.js';
 import type { BusEvent } from './bus.js';
 import { presentChanges } from './changes.js';
-import { getRevisionInfo, listChanges } from './revision.js';
+import { getRevisionInfo, listChanges, type RevisionInfo } from './revision.js';
 
 const streamQuery = z.object({ since: z.coerce.number().int().min(0).optional() });
 
@@ -28,7 +28,23 @@ export function registerCatalogStream(
       typeof lastEventId === 'string' && /^\d{1,10}$/.test(lastEventId.trim()) ? Number(lastEventId.trim()) : undefined;
     const since = fromHeader ?? q.since;
     const lang = resolveLang(req.headers['accept-language']);
-    const info = await getRevisionInfo(ctx.db);
+
+    let closed = false;
+    let live = false;
+    const pending: BusEvent[] = [];
+    // Подписка до чтения ревизии: изменение, разосланное между ними, попадёт в pending, а не потеряется.
+    const unsubscribe = ctx.bus.subscribe((ev) => {
+      if (closed) return;
+      if (live) enqueue(ev);
+      else pending.push(ev);
+    });
+    let info: RevisionInfo;
+    try {
+      info = await getRevisionInfo(ctx.db);
+    } catch (err) {
+      unsubscribe();
+      throw err;
+    }
 
     reply.hijack();
     const res = reply.raw;
@@ -41,10 +57,7 @@ export function registerCatalogStream(
       'x-catalog-revision': String(info.revision),
     });
 
-    let closed = false;
-    let live = false;
     let lastSent = since ?? info.revision;
-    const pending: BusEvent[] = [];
     let chain: Promise<void> = Promise.resolve();
 
     const write = (chunk: string) => {
@@ -83,11 +96,6 @@ export function registerCatalogStream(
       });
     };
 
-    const unsubscribe = ctx.bus.subscribe((ev) => {
-      if (closed) return;
-      if (live) enqueue(ev);
-      else pending.push(ev);
-    });
     connections.add(res);
     req.raw.on('close', cleanup);
     res.on('close', cleanup);

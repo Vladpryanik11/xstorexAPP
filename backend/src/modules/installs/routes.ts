@@ -216,6 +216,9 @@ export async function installsRoutes(
   // GET + HEAD in one route: the auto-generated HEAD would read the whole stream.
   const serveIpa = async (req: FastifyRequest, reply: FastifyReply) => {
     const { row } = await grantByToken(req);
+    // Снятое с публикации приложение не отдаётся и по действующему гранту.
+    const [target] = await ctx.db.select({ published: apps.published }).from(apps).where(eq(apps.id, row.appId));
+    if (!target?.published) throw notFound();
     const key = row.blobKey!;
     const stat = await ctx.storage.stat(key);
     if (!stat) {

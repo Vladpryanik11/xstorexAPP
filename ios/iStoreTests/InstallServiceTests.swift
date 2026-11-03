@@ -45,10 +45,13 @@ final class MockAPIClient: APIClientProtocol, @unchecked Sendable {
 @MainActor
 final class MockOpener: URLOpening {
     var result = true
+    /// Вызывается, пока ссылка «открывается».
+    var onOpen: (() -> Void)?
     private(set) var opened: [URL] = []
 
     func open(_ url: URL) async -> Bool {
         opened.append(url)
+        onOpen?()
         return result
     }
 }
@@ -260,6 +263,54 @@ final class InstallServiceTests: XCTestCase {
         await waitUntil { self.states.last == .idle }
         XCTAssertEqual(api.calls(method: .post, path: "/catalog/installs"), 2)
         XCTAssertEqual(opener.opened.count, 1)
+    }
+
+    func testGrantExpiredWhilePreparingIsRequestedAgain() async throws {
+        let api = MockAPIClient { method, path, index in
+            switch (method, path) {
+            case (.post, "/catalog/installs"):
+                return index == 0
+                    ? Fixtures.grant(status: "preparing", itms: false)
+                    : Fixtures.grant(status: "ready", id: "ins_2")
+            case (.get, "/catalog/installs/ins_1"):
+                // Так сервер отвечает на опрос истёкшего гранта: 200, `failed` и `grant_expired`.
+                return Fixtures.grant(status: "failed", itms: false, errorCode: "grant_expired")
+            default:
+                return "{}"
+            }
+        }
+        let opener = MockOpener()
+        let service = makeService(api: api, opener: opener)
+        let app = try makeApp()
+        service.start(app)
+
+        await waitUntil { self.states.last == .idle }
+        XCTAssertEqual(api.calls(method: .post, path: "/catalog/installs"), 2)
+        XCTAssertEqual(opener.opened.count, 1)
+        XCTAssertFalse(states.contains { if case .failed = $0 { return true } else { return false } })
+    }
+
+    func testCancelWhileHandingOffStaysCancelled() async throws {
+        let api = MockAPIClient { method, path, _ in
+            if method == .post && path == "/catalog/installs" {
+                return Fixtures.grant(status: "ready")
+            }
+            return "{}"
+        }
+        let opener = MockOpener()
+        let service = makeService(api: api, opener: opener)
+        let app = try makeApp()
+        opener.onOpen = { [weak service] in
+            service?.cancel(appId: app.id)
+        }
+        service.start(app)
+
+        await waitUntil { opener.opened.count == 1 }
+        // Время, за которое задача дошла бы до `.installing`.
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(service.state(for: app.id), .idle)
+        XCTAssertTrue(service.activeInstalls.isEmpty)
+        XCTAssertFalse(states.contains(.installing))
     }
 
     func testIncompatibleOSIsBlockedBeforeStart() throws {

@@ -32,8 +32,8 @@ actor CatalogLiveSync: CatalogLiveObserving {
 
     private var streamTask: Task<Void, Never>?
     private var subscribers: [UUID: AsyncStream<CatalogLiveEvent>.Continuation] = [:]
+    /// Единственный курсор потока: уходит в `?since=` и двигается и по SSE, и по догону, и по `/groupings`.
     private(set) var lastRevision: Int?
-    private(set) var lastEventId: String?
     private(set) var isConnected = false
 
     init(api: APIClientProtocol, catalog: CatalogServicing, session: URLSession = CatalogLiveSync.makeSession()) {
@@ -104,7 +104,6 @@ actor CatalogLiveSync: CatalogLiveObserving {
     func reset() {
         stop()
         lastRevision = nil
-        lastEventId = nil
     }
 
     static func backoffDelay(attempt: Int) -> TimeInterval {
@@ -147,9 +146,8 @@ actor CatalogLiveSync: CatalogLiveObserving {
             return .unauthorized
         }
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        if let eventId = lastEventId {
-            request.setValue(eventId, forHTTPHeaderField: "Last-Event-ID")
-        }
+        // `Last-Event-ID` не шлём: сервер предпочёл бы его `since`, а id двигается только по событиям SSE
+        // и отстаёт после догона через `/catalog/changes`.
 
         do {
             let (bytes, response) = try await session.bytes(for: request)
@@ -164,7 +162,7 @@ actor CatalogLiveSync: CatalogLiveObserving {
             }
             isConnected = true
             var splitter = SSELineSplitter()
-            var parser = SSEParser(lastEventId: lastEventId)
+            var parser = SSEParser()
             var received = false
             for try await byte in bytes {
                 guard let line = splitter.append(byte) else { continue }
@@ -189,8 +187,7 @@ actor CatalogLiveSync: CatalogLiveObserving {
 
     // MARK: - События
 
-    /// Курсор (`lastRevision`, `Last-Event-ID`) двигают только `change` и `reset`:
-    /// у `hello` в `id` лежит присланный `since`, а не текущая ревизия.
+    /// Курсор двигают только `change` и `reset`: у `hello` в `id` лежит присланный `since`, а не текущая ревизия.
     private func handle(_ event: SSEEvent) {
         let data = Data(event.data.utf8)
         switch event.event {
@@ -198,15 +195,9 @@ actor CatalogLiveSync: CatalogLiveObserving {
             break
         case "change":
             if let change = try? decoder.decode(CatalogChange.self, from: data) {
-                if let id = event.id {
-                    lastEventId = id
-                }
                 apply(change)
             }
         case "reset":
-            if let id = event.id {
-                lastEventId = id
-            }
             if let payload = try? decoder.decode(RevisionPayload.self, from: data) {
                 lastRevision = payload.revision
             }

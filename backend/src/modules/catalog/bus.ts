@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events';
-import type { FastifyBaseLogger } from 'fastify';
 import type { Db } from '../../db/index.js';
 import { getRevisionInfo, listChanges, type ChangeRow } from './revision.js';
 
 export type BusEvent = { type: 'change'; change: ChangeRow } | { type: 'reset'; revision: number };
+
+export interface BusLog {
+  error(obj: object, msg: string): void;
+}
 
 /**
  * Fan-out of committed catalog changes to SSE connections.
@@ -18,7 +21,7 @@ export class CatalogBus {
 
   constructor(
     private readonly db: Db,
-    private readonly log: FastifyBaseLogger | null = null,
+    private readonly log: BusLog | null = null,
   ) {
     this.emitter.setMaxListeners(0);
   }

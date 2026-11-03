@@ -1,6 +1,9 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createContext } from '../src/app.js';
+import { loadConfig } from '../src/config.js';
+import type { Database, Db } from '../src/db/index.js';
 import { admin, bearer, createTestEnv, json, type TestEnv } from './helpers.js';
 
 interface SseEvent {
@@ -209,5 +212,20 @@ describe('catalog stream (SSE)', () => {
     await stale.waitFor(() => stale.events.length >= 2);
     expect(stale.events[1]).toEqual({ id: String(head), event: 'reset', data: JSON.stringify({ revision: head }) });
     stale.close();
+  });
+});
+
+describe('catalog bus', () => {
+  it('logs a failed pump through the app logger', async () => {
+    const errors: string[] = [];
+    const brokenDb = {
+      select: () => {
+        throw new Error('database is down');
+      },
+    } as unknown as Db;
+    const log = { info: () => undefined, error: (_obj: object, msg: string) => errors.push(msg) };
+    const ctx = createContext(loadConfig({}, process.cwd()), { db: brokenDb } as Database, { log });
+    await ctx.bus.notify();
+    expect(errors).toEqual(['catalog bus pump failed']);
   });
 });

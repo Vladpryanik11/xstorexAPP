@@ -5,6 +5,9 @@ protocol TokenStoring: Sendable {
     func token() async -> String?
     func save(_ token: String) async
     func clear() async
+    /// Удаляет токен, только если хранится именно `token` (или ничего). `false` — пока шёл запрос,
+    /// выдали другой токен, и его трогать нельзя.
+    func clear(ifEqualTo token: String) async -> Bool
 }
 
 /// Токен в Keychain с кэшем в памяти.
@@ -38,6 +41,13 @@ actor KeychainTokenStore: TokenStoring {
         cached = nil
         didLoad = true
     }
+
+    func clear(ifEqualTo token: String) -> Bool {
+        guard let current = self.token() else { return true }
+        guard current == token else { return false }
+        clear()
+        return true
+    }
 }
 
 /// Токен только в памяти: для тестов и превью.
@@ -51,6 +61,13 @@ actor InMemoryTokenStore: TokenStoring {
     func token() -> String? { value }
     func save(_ token: String) { value = token }
     func clear() { value = nil }
+
+    func clear(ifEqualTo token: String) -> Bool {
+        guard let current = value else { return true }
+        guard current == token else { return false }
+        value = nil
+        return true
+    }
 }
 
 /// UUID установки (`X-Install-Id`). Генерируется при первом запуске и живёт в Keychain,

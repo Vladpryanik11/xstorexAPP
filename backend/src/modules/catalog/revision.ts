@@ -37,7 +37,13 @@ export async function recordChanges(
   return row.revision;
 }
 
-export async function getRevisionInfo(db: Db): Promise<{ revision: number; floor: number }> {
+export interface RevisionInfo {
+  revision: number;
+  /** Изменения с ревизией не выше floor удалены из журнала. */
+  floor: number;
+}
+
+export async function getRevisionInfo(db: Db): Promise<RevisionInfo> {
   const [row] = await db
     .select({ revision: storeState.catalogRevision, floor: storeState.journalFloor })
     .from(storeState)
