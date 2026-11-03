@@ -55,7 +55,7 @@
 | Вопрос | Решение |
 |---|---|
 | Бренд | iStore, палитра 1 в 1 с оригиналом (`#0041DC → #3672E0 → #6AA2E3 → #92BDEF`) |
-| Функционал | Как у DDE Store, кроме части из «Рамок» в `CLAUDE.md` |
+| Функционал | Как у DDE Store |
 | Сборка iOS | Только CI на GitHub Actions (у пользователя Windows) |
 | Бэкенд | Node.js + TypeScript, Fastify, Drizzle, PostgreSQL / PGlite |
 | Хостинг | Свой VPS, Docker Compose, Caddy |
