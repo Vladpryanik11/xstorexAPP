@@ -34,14 +34,14 @@ final class PushCoordinator: NSObject, PushPermissionRequesting {
     private let api: APIClientProtocol
     private let tokenStore: TokenStoring
     private let environment: String
-    private let registerForRemote: () -> Void
+    private let registerForRemote: @MainActor () -> Void
     private var pendingAppId: String?
 
     init(
         api: APIClientProtocol,
         tokenStore: TokenStoring,
         environment: String,
-        registerForRemote: @escaping () -> Void = { UIApplication.shared.registerForRemoteNotifications() }
+        registerForRemote: @escaping @MainActor () -> Void = { UIApplication.shared.registerForRemoteNotifications() }
     ) {
         self.api = api
         self.tokenStore = tokenStore
