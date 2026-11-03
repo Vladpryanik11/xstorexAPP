@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
@@ -330,6 +331,25 @@ export const pushTokens = pgTable('push_tokens', {
   tzOffsetMinutes: integer('tz_offset_minutes'),
   updatedAt: updatedAt(),
 });
+
+/** Подписки аккаунта на обновления приложений (Follow). */
+export const follows = pgTable(
+  'follows',
+  {
+    accountId: text('account_id')
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
+    appId: text('app_id')
+      .notNull()
+      .references(() => apps.id, { onDelete: 'cascade' }),
+    /** Подписка остаётся, но уведомления об обновлениях не приходят. */
+    muted: boolean('muted').notNull().default(false),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.accountId, t.appId] }), index('follows_app_idx').on(t.appId)],
+);
+
+export type FollowRow = typeof follows.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Singletons (id = 1)

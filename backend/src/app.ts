@@ -12,6 +12,7 @@ import { CatalogBus } from './modules/catalog/bus.js';
 import { catalogRoutes } from './modules/catalog/routes.js';
 import { staticRoutes } from './modules/catalog/static.js';
 import { clientRoutes } from './modules/client/routes.js';
+import { followsRoutes } from './modules/follows/routes.js';
 import { installsRoutes } from './modules/installs/routes.js';
 import { searchRoutes } from './modules/search/routes.js';
 import { PreSignedProvider } from './signing/presigned.js';
@@ -129,6 +130,7 @@ export async function buildApp(config: AppConfig, options: BuildAppOptions = {})
       await api.register(catalogRoutes, { ctx, guards, sseConnections });
       await api.register(searchRoutes, { ctx, guards });
       await api.register(installsRoutes, { ctx, guards });
+      await api.register(followsRoutes, { ctx, guards });
     },
     { prefix: '/api/v1' },
   );

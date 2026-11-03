@@ -105,6 +105,25 @@
 | `POST /client/events` 🔒 | `{"events": [{"kind": "install.step" \| "net.error" \| "app.launch", "ts": "…", "props": {…}}]}` (до 100 событий) → `202` |
 | `POST /client/push-token` 🔒 | `{"apns_token": "hex", "apns_env": "sandbox" \| "production", "locale", "tz_offset_minutes"}` → `204` (этап 2 использует) |
 
+## Follows — подписки на приложения
+
+Функция этапа 3 (SPEC.md), бэкенд готов заранее. Подписка на обновления приложения. Как и каталог, при неактивной подписке отвечает `403 account_inactive`. Снятое с публикации приложение — `404 not_found`.
+
+| Метод и путь | Ответ |
+|---|---|
+| `GET /apps/{id}/follow` 🔒 | `FollowStatus` |
+| `POST /apps/{id}/follow` 🔒 | `200 FollowStatus`. Идемпотентно: повторная подписка не меняет `muted` и дату |
+| `DELETE /apps/{id}/follow` 🔒 | `200 FollowStatus` с `following: false`. Идемпотентно |
+| `PUT /apps/{id}/follow/mute` 🔒 | `{"muted": true}` → `200 FollowStatus`. Без подписки — `409 not_following` |
+| `GET /client/follows?cursor&limit` 🔒 | `{"items": [{"app": AppSummary, "muted": false, "followed_at": "…"}], "next_cursor"}`, новые сверху. Снятые с публикации приложения скрыты, подписка на них сохраняется |
+
+```jsonc
+// FollowStatus
+{ "app_id": "app_…", "following": true, "muted": false, "follower_count": 12 }
+```
+
+Уведомления об обновлениях подписанных приложений придут с push на этапе 2: `muted` их отключает.
+
 ## Catalog
 
 | Метод и путь | Ответ |

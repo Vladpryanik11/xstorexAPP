@@ -39,6 +39,7 @@ export interface SeedResult {
 }
 
 const TABLES = [
+  'follows',
   'client_events',
   'search_requests',
   'push_tokens',
