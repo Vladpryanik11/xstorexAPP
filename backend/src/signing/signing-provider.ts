@@ -18,9 +18,10 @@ export type SigningResult =
 
 /**
  * Produces an installable IPA for a grant.
- * Stage 1: PreSignedProvider (the owner uploads IPAs already signed with their certificate).
- * Stage 2: a zsign-based adapter that re-signs the owner's own builds asynchronously
- * (returns `preparing`, the client polls GET /catalog/installs/{id}).
+ * Current implementation: PreSignedProvider returns an already uploaded IPA without signing it.
+ * Required next: server-side signing and re-signing for uploaded IPA files, including
+ * third-party and modified builds, with device/profile selection and asynchronous processing.
+ * The client can poll GET /catalog/installs/{id} while status is `preparing`.
  */
 export interface SigningProvider {
   readonly name: string;
