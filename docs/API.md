@@ -1,6 +1,6 @@
-# iStore API v1 — контракт этапа 1
+# Xstore API v1 — контракт текущего backend
 
-Это общий контракт для бэкенда и iOS-клиента. Любое изменение сначала вносится сюда.
+Общий API для backend, сайта, Telegram Mini App и iOS-клиента. Ниже описано то, что уже реализовано; новые маршруты проектируются здесь до разработки.
 
 ## Общие правила
 
@@ -163,7 +163,7 @@
 }
 ```
 
-На этапе 1 `PreSignedProvider` сразу возвращает `status = ready`. Клиент открывает `itms_url` через `UIApplication.shared.open`. `manifest_url` и IPA должны отдаваться по HTTPS с валидным сертификатом (iOS требует этого для OTA). Базовый публичный URL задаётся в конфиге бэкенда `PUBLIC_BASE_URL`.
+Сейчас `PreSignedProvider` сразу возвращает `status = ready` для загруженного IPA: фактической серверной подписи ещё нет. Серверная подпись и переподпись любых загруженных IPA — обязательная задача Xstore. Нативный клиент открывает `itms_url` через `UIApplication.shared.open`; сайт передаёт установку в Safari. `manifest_url` и IPA должны отдаваться по HTTPS с валидным сертификатом (требование iOS). Базовый URL задаёт `PUBLIC_BASE_URL`.
 
 ## Уточнения по реализации этапа 1
 
@@ -187,7 +187,7 @@
 | Метод и путь | Назначение |
 |---|---|
 | `POST /apps`, `PATCH /apps/{id}`, `DELETE /apps/{id}` | CRUD приложений (DELETE = снять с публикации). Каждое изменение увеличивает ревизию |
-| `POST /apps/{id}/builds` (multipart: `ipa`, поля `version`, `build`, `notes`) | Загрузка уже подписанного IPA. Сервер считает `sha256` и `size_bytes`, достаёт `CFBundleIdentifier` и `CFBundleShortVersionString` из `Info.plist` внутри IPA |
+| `POST /apps/{id}/builds` (multipart: `ipa`, поля `version`, `build`, `notes`) | Сейчас: загрузка IPA без переподписи; сервер считает `sha256` и `size_bytes`, читает `CFBundleIdentifier` и `CFBundleShortVersionString` из `Info.plist`. Требуется: серверная подпись загруженного IPA и выбор сертификата/provisioning profile |
 | `PUT /storefront/{tab}` | Полная замена комнат вкладки: `{"rooms": [{"id", "style", "title", "subtitle", "app_ids": [], "hero": [], "category_ids": []}]}` |
 | `POST /activation-codes` | `{"count": 10, "plan_id": "month"}` → `{"codes": ["ABCD-EFGH-JKLM", …]}` |
 | `PUT /store-state` | `{"state": "open" \| "closed", "closed": {…}}` |
