@@ -72,11 +72,10 @@ final class BrandGradientView: UIView {
     }
 }
 
-/// Знак Xstore: монограмма «i» на бренд-градиенте, как иконка приложения.
+/// Знак Xstore: монограмма «X» на бренд-градиенте, как иконка приложения.
 final class BrandMarkView: UIView {
     private let gradient = GradientView(colors: Palette.brandGradient)
-    private let stem = UIView()
-    private let dot = UIView()
+    private let monogram = CAShapeLayer()
 
     init() {
         super.init(frame: .zero)
@@ -86,10 +85,8 @@ final class BrandMarkView: UIView {
         clipsToBounds = true
         layer.cornerCurve = .continuous
         addSubview(gradient)
-        stem.backgroundColor = .white
-        dot.backgroundColor = .white
-        addSubview(stem)
-        addSubview(dot)
+        monogram.fillColor = UIColor.white.cgColor
+        layer.addSublayer(monogram)
     }
 
     @available(*, unavailable)
@@ -102,22 +99,27 @@ final class BrandMarkView: UIView {
         let side = min(bounds.width, bounds.height)
         layer.cornerRadius = side * 0.2237
         gradient.frame = bounds
-        let stemWidth = side * 0.17
-        let stemHeight = side * 0.40
-        stem.frame = CGRect(
-            x: bounds.midX - stemWidth / 2,
-            y: bounds.midY - side * 0.10,
-            width: stemWidth,
-            height: stemHeight
-        )
-        stem.layer.cornerRadius = stemWidth / 2
-        let dotSide = side * 0.19
-        dot.frame = CGRect(
-            x: bounds.midX - dotSide / 2,
-            y: bounds.midY - side * 0.33,
-            width: dotSide,
-            height: dotSide
-        )
-        dot.layer.cornerRadius = dotSide / 2
+        // Геометрия совпадает с ios/scripts/make-icon.mjs: два штриха-параллелограмма с горизонтальными срезами.
+        let halfWidth = side * 0.17
+        let halfHeight = side * 0.23
+        let strokeWidth = side * 0.13
+        let halfCut = strokeWidth / 2 * hypot(halfWidth, halfHeight) / halfHeight
+        let path = UIBezierPath()
+        for direction: CGFloat in [1, -1] {
+            let top = bounds.midX - halfWidth * direction
+            let bottom = bounds.midX + halfWidth * direction
+            // Оба штриха обходятся по часовой стрелке, чтобы перекрестье закрашивалось (nonZero).
+            path.move(to: CGPoint(x: top - halfCut, y: bounds.midY - halfHeight))
+            path.addLine(to: CGPoint(x: top + halfCut, y: bounds.midY - halfHeight))
+            path.addLine(to: CGPoint(x: bottom + halfCut, y: bounds.midY + halfHeight))
+            path.addLine(to: CGPoint(x: bottom - halfCut, y: bounds.midY + halfHeight))
+            path.close()
+        }
+        // Без неявной анимации слоя при смене размера.
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        monogram.frame = bounds
+        monogram.path = path.cgPath
+        CATransaction.commit()
     }
 }

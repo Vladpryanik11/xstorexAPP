@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Генерирует иконку Xstore 1024×1024 (PNG, RGB без альфы, как требует App Store):
-// бренд-градиент по диагонали сверху справа → снизу слева и белая монограмма «i».
+// бренд-градиент по диагонали сверху справа → снизу слева и белая монограмма «X».
 // Собственный PNG-энкодер на node:zlib, без зависимостей.
 // Запуск: node ios/scripts/make-icon.mjs [путь/к/AppIcon.png]
 import { deflateSync } from "node:zlib";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 const SIZE = 1024;
 const here = dirname(fileURLToPath(import.meta.url));
 const output =
-  process.argv[2] ?? join(here, "..", "Xstore", "Resources", "Assets.xcassets", "AppIcon.appiconset", "AppIcon.png");
+  process.argv[2] ?? join(here, "..", "iStore", "Resources", "Assets.xcassets", "AppIcon.appiconset", "AppIcon.png");
 
 // Бренд-градиент (SPEC §3).
 const stops = [
@@ -35,24 +35,48 @@ function gradientAt(t) {
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-// Монограмма «i»: капсула-ножка и точка. Геометрия совпадает с BrandMarkView.
+// Монограмма «X»: два диагональных штриха, концы срезаны по горизонтали, как у буквы.
+// Геометрия совпадает с BrandMarkView.
 const cx = SIZE / 2;
-const stemWidth = SIZE * 0.17;
-const stemTop = SIZE * 0.4;
-const stemBottom = SIZE * 0.8;
-const stemRadius = stemWidth / 2;
-const dotRadius = (SIZE * 0.19) / 2;
-const dotCenterY = SIZE * 0.17 + dotRadius;
+const cy = SIZE / 2;
+const halfWidth = SIZE * 0.17; // смещение осевой линии штриха по x от центра до края
+const halfHeight = SIZE * 0.23;
+const strokeWidth = SIZE * 0.13;
+// Половина горизонтального среза: штрих шириной strokeWidth поперёк диагонали.
+const halfCut = ((strokeWidth / 2) * Math.hypot(halfWidth, halfHeight)) / halfHeight;
 
-function distanceToStem(x, y) {
-  const top = stemTop + stemRadius;
-  const bottom = stemBottom - stemRadius;
-  const py = clamp(y, top, bottom);
-  return Math.hypot(x - cx, y - py) - stemRadius;
+// Штрих — параллелограмм; k = 1 идёт сверху слева вниз направо, k = -1 — сверху справа вниз налево.
+function strokePolygon(k) {
+  const top = cx - halfWidth * k;
+  const bottom = cx + halfWidth * k;
+  return [
+    [top - halfCut, cy - halfHeight],
+    [top + halfCut, cy - halfHeight],
+    [bottom + halfCut, cy + halfHeight],
+    [bottom - halfCut, cy + halfHeight],
+  ];
+}
+const strokes = [strokePolygon(1), strokePolygon(-1)];
+
+// Знаковое расстояние до выпуклого многоугольника: отрицательное внутри.
+function distanceToPolygon(x, y, points) {
+  let nearest = Infinity;
+  let inside = true;
+  for (let i = 0; i < points.length; i++) {
+    const [ax, ay] = points[i];
+    const [bx, by] = points[(i + 1) % points.length];
+    const ex = bx - ax;
+    const ey = by - ay;
+    const t = clamp(((x - ax) * ex + (y - ay) * ey) / (ex * ex + ey * ey), 0, 1);
+    nearest = Math.min(nearest, Math.hypot(x - ax - ex * t, y - ay - ey * t));
+    // Обход по часовой стрелке (ось y вниз): внутри точка правее каждого ребра.
+    if (ex * (y - ay) - ey * (x - ax) < 0) inside = false;
+  }
+  return inside ? -nearest : nearest;
 }
 
-function distanceToDot(x, y) {
-  return Math.hypot(x - cx, y - dotCenterY) - dotRadius;
+function distanceToMark(x, y) {
+  return Math.min(...strokes.map((points) => distanceToPolygon(x, y, points)));
 }
 
 const rowLength = SIZE * 3 + 1;
@@ -73,14 +97,14 @@ for (let y = 0; y < SIZE; y++) {
     b += (255 - b) * glow * 0.12;
 
     // Лёгкая тень под монограммой.
-    const shadowDistance = Math.min(distanceToStem(px, py - 14), distanceToDot(px, py - 14));
+    const shadowDistance = distanceToMark(px, py - 14);
     const shadow = clamp(1 - shadowDistance / 40, 0, 1) * 0.18;
     r *= 1 - shadow;
     g *= 1 - shadow;
     b *= 1 - shadow;
 
     // Монограмма со сглаживанием по расстоянию.
-    const d = Math.min(distanceToStem(px, py), distanceToDot(px, py));
+    const d = distanceToMark(px, py);
     const coverage = clamp(0.5 - d, 0, 1);
     r += (255 - r) * coverage;
     g += (255 - g) * coverage;
