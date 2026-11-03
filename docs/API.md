@@ -103,7 +103,7 @@
 | `GET /client/store-state` (публичный) | `{"state": "open" \| "closed", "closed": {"title", "message", "reopens_at" \| null, "links": [{"title", "url"}]} \| null}` |
 | `GET /client/version?build=<int>` (публичный) | `{"latest_version": "1.2.0", "latest_build": 120, "min_supported_build": 100, "update_available": true, "mandatory": false, "release_notes": "…", "update_url": "itms-services://…" \| null}`. `mandatory = build < min_supported_build` |
 | `POST /client/events` 🔒 | `{"events": [{"kind": "install.step" \| "net.error" \| "app.launch", "ts": "…", "props": {…}}]}` (до 100 событий) → `202` |
-| `POST /client/push-token` 🔒 | `{"apns_token": "hex", "apns_env": "sandbox" \| "production", "locale", "tz_offset_minutes"}` → `204` (этап 2 использует) |
+| `POST /client/push-token` 🔒 | `{"apns_token": "hex", "apns_env": "sandbox" \| "production", "locale", "tz_offset_minutes"}` → `204`. Токен APNs принадлежит одной установке: если его прислало другое устройство, у прежнего он удаляется |
 
 ## Follows — подписки на приложения
 
@@ -122,7 +122,30 @@
 { "app_id": "app_…", "following": true, "muted": false, "follower_count": 12 }
 ```
 
-Уведомления об обновлениях подписанных приложений придут с push на этапе 2: `muted` их отключает.
+Когда выходит новая версия, подписчики получают push (раздел «Push»). `muted` его отключает.
+
+## Push
+
+Сервер отправляет уведомления через APNs, если заданы `APNS_KEY_ID`, `APNS_TEAM_ID` и `APNS_KEY_BASE64` (`deploy/README.md`). Без них push выключен, остальное работает.
+
+**Обновление приложения.** Отправляется, когда в админке загружен билд с версией выше текущей (`3.2.1` > `3.2.0`, тот же номер или откат — без push). Получатели — устройства подписчиков без `muted`, с активной подпиской, выполненным входом и push-токеном. Язык текста — по `locale` из `/client/push-token`.
+
+```jsonc
+{
+  "aps": {
+    "alert": { "title": "Lumen Notes", "body": "Вышла версия 3.2.1. Исправления" },
+    "sound": "default",
+    "thread-id": "app_update"
+  },
+  "kind": "app_update",          // клиент открывает карточку app_id
+  "app_id": "app_…",
+  "version": "3.2.1"
+}
+```
+
+Заголовки APNs: `apns-collapse-id: update-<app_id>` (новое уведомление заменяет старое), срок хранения — 24 часа. Токены, которые APNs отклонил как недействительные (`410`, `BadDeviceToken`, `DeviceTokenNotForTopic`), сервер удаляет.
+
+Другие значения `kind` клиент игнорирует, но уведомление показывает (сейчас есть ещё `test` из админки).
 
 ## Catalog
 
@@ -211,3 +234,4 @@
 | `POST /activation-codes` | `{"count": 10, "plan_id": "month"}` → `{"codes": ["ABCD-EFGH-JKLM", …]}` |
 | `PUT /store-state` | `{"state": "open" \| "closed", "closed": {…}}` |
 | `PUT /client-version` | `{"latest_version", "latest_build", "min_supported_build", "release_notes", "update_url"}` |
+| `POST /push/test` | `{"account_id": "acc_…", "title"?: "…", "body"?: "…"}` → `{"devices": 1, "sent": 1, "failed": 0, "removed": 0, "errors": [{"device_id", "status", "reason"}]}`. Тестовый push на устройства аккаунта с выполненным входом; ждёт ответа APNs. Без настройки APNs — `503 push_disabled` |

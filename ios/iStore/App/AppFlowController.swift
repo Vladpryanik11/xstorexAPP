@@ -63,6 +63,9 @@ final class AppFlowController: AppRouting {
         let accountInactiveHandler: APIClient.AccountInactiveHandler = { [weak self] in
             await self?.handleAccountInactive()
         }
+        container.push.onOpenApp = { [weak self] appId in
+            self?.openApp(id: appId)
+        }
         Task { [weak self] in
             await apiClient.setUnauthorizedHandler(unauthorizedHandler)
             await apiClient.setAccountInactiveHandler(accountInactiveHandler)
@@ -119,12 +122,20 @@ final class AppFlowController: AppRouting {
         guard url.scheme?.lowercased() == "istore" else { return }
         let parts = ([url.host ?? ""] + url.pathComponents).filter { !$0.isEmpty && $0 != "/" }
         guard parts.count >= 2, parts[0] == "app" else { return }
-        let appId = parts[1]
-        if isSignedIn, let navigation = currentNavigationController() {
-            showAppDetail(appId: appId, summary: nil, from: navigation)
-        } else {
+        openApp(id: parts[1])
+    }
+
+    /// Карточка приложения из deeplink или push. До входа `app_id` ждёт основной интерфейс.
+    func openApp(id appId: String) {
+        guard isSignedIn, let navigation = currentNavigationController() else {
             pendingAppId = appId
+            return
         }
+        // Шит аккаунта и другие модальные экраны закрываем, иначе карточка откроется под ними.
+        if tabBarController?.presentedViewController != nil {
+            tabBarController?.dismiss(animated: false)
+        }
+        showAppDetail(appId: appId, summary: nil, from: navigation)
     }
 
     // MARK: - Основной интерфейс
@@ -145,6 +156,7 @@ final class AppFlowController: AppRouting {
         Task {
             await liveSync.start()
         }
+        container.push.refreshRegistration()
         if let appId = pendingAppId, let navigation = currentNavigationController() {
             pendingAppId = nil
             showAppDetail(appId: appId, summary: nil, from: navigation)

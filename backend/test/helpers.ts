@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
-import { buildApp } from '../src/app.js';
+import { buildApp, type BuildAppOptions } from '../src/app.js';
 import { loadConfig, type AppConfig } from '../src/config.js';
 import type { AppContext } from '../src/context.js';
 import { openDatabase, type Database } from '../src/db/index.js';
@@ -21,7 +21,10 @@ export interface TestEnv {
   close(): Promise<void>;
 }
 
-export async function createTestEnv(overrides: Partial<AppConfig> = {}): Promise<TestEnv> {
+export async function createTestEnv(
+  overrides: Partial<AppConfig> = {},
+  options: Omit<BuildAppOptions, 'database'> = {},
+): Promise<TestEnv> {
   const storageDir = await mkdtemp(path.join(os.tmpdir(), 'istore-test-'));
   const config: AppConfig = {
     ...loadConfig({}, storageDir),
@@ -36,7 +39,7 @@ export async function createTestEnv(overrides: Partial<AppConfig> = {}): Promise
     ...overrides,
   };
   const database = await openDatabase({ databaseUrl: null, pgliteDir: null });
-  const app = await buildApp(config, { database });
+  const app = await buildApp(config, { ...options, database });
   const seed = await seedDemo(app.ctx, { images: false, extraCodes: 3 });
   return {
     app,

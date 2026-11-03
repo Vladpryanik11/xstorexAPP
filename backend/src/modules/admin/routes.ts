@@ -6,10 +6,11 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../../context.js';
-import { apps, categories, clientVersion, storeState } from '../../db/schema.js';
+import { accounts, apps, categories, clientVersion, storeState } from '../../db/schema.js';
 import { safeEqual } from '../../lib/crypto.js';
 import { AppError, invalidRequest, notFound } from '../../lib/errors.js';
 import { localizedInput, parseInput, toLocalized, toLocalizedOpt } from '../../lib/validation.js';
+import { accountRecipients } from '../../push/notifier.js';
 import { iso } from '../catalog/present.js';
 import { recordChanges } from '../catalog/revision.js';
 import { TABS } from '../catalog/storefront.js';
@@ -25,6 +26,14 @@ const codesSchema = z
     count: z.number().int().min(1).max(1000),
     plan_id: z.string().min(1).max(64),
     duration_days: z.number().int().min(1).max(3650).optional(),
+  })
+  .strict();
+
+const pushTestSchema = z
+  .object({
+    account_id: z.string().min(1).max(80),
+    title: z.string().trim().min(1).max(100).optional(),
+    body: z.string().trim().min(1).max(500).optional(),
   })
   .strict();
 
@@ -213,6 +222,35 @@ export async function adminRoutes(app: FastifyInstance, opts: { ctx: AppContext 
         : null;
     await ctx.db.update(storeState).set({ state: body.state, closed, updatedAt: ctx.now() }).where(eq(storeState.id, 1));
     return { state: body.state, closed };
+  });
+
+  // --- push --------------------------------------------------------------------
+
+  /** Проверка настройки APNs: отправляет тестовое уведомление на устройства аккаунта и ждёт результат. */
+  app.post('/push/test', async (req) => {
+    const body = parseInput(pushTestSchema, req.body, 'body');
+    if (!ctx.push.enabled) {
+      throw new AppError(503, 'push_disabled', {
+        en: 'APNs is not configured (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_BASE64).',
+        ru: 'APNs не настроен (APNS_KEY_ID, APNS_TEAM_ID, APNS_KEY_BASE64).',
+      });
+    }
+    const [account] = await ctx.db.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, body.account_id));
+    if (!account) throw notFound();
+    const recipients = await accountRecipients(ctx.db, account.id);
+    const summary = await ctx.push.deliver(recipients, (lang) => ({
+      payload: {
+        aps: {
+          alert: {
+            title: body.title ?? 'iStore',
+            body: body.body ?? (lang === 'ru' ? 'Тестовое уведомление: push работает.' : 'Test notification: push works.'),
+          },
+          sound: 'default',
+        },
+        kind: 'test',
+      },
+    }));
+    return { devices: recipients.length, ...summary };
   });
 
   app.put('/client-version', async (req) => {

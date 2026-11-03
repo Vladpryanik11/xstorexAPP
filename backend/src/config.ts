@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { createPrivateKey, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 export interface AppConfig {
@@ -27,6 +27,18 @@ export interface AppConfig {
   activateRateLimit: { max: number; timeWindowMs: number };
   renewUrl: string | null;
   trustProxy: boolean;
+  /** null → push-уведомления выключены. */
+  apns: ApnsConfig | null;
+}
+
+export interface ApnsConfig {
+  /** Key ID ключа `.p8` из Apple Developer. */
+  keyId: string;
+  teamId: string;
+  /** PEM ключа `.p8`. */
+  keyPem: string;
+  /** Bundle id приложения iStore. */
+  topic: string;
 }
 
 const emptyToUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
@@ -57,6 +69,10 @@ const envSchema = z.object({
   ACTIVATE_RATE_LIMIT_WINDOW_MS: optInt(60_000, 1000),
   RENEW_URL: z.preprocess(emptyToUndefined, z.url({ protocol: /^https?$/ }).optional()),
   TRUST_PROXY: z.preprocess(emptyToUndefined, z.enum(['true', 'false', '1', '0']).default('false')),
+  APNS_KEY_ID: z.preprocess(emptyToUndefined, z.string().regex(/^[A-Z0-9]{10}$/, 'expected a 10-character key id').optional()),
+  APNS_TEAM_ID: z.preprocess(emptyToUndefined, z.string().regex(/^[A-Z0-9]{10}$/, 'expected a 10-character team id').optional()),
+  APNS_KEY_BASE64: optStr,
+  APNS_TOPIC: z.preprocess(emptyToUndefined, z.string().regex(/^[A-Za-z0-9.-]{3,155}$/).default('com.istore.app')),
 });
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd = process.cwd()): AppConfig {
@@ -90,7 +106,22 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd = process.c
     activateRateLimit: { max: e.ACTIVATE_RATE_LIMIT_MAX, timeWindowMs: e.ACTIVATE_RATE_LIMIT_WINDOW_MS },
     renewUrl: e.RENEW_URL ?? null,
     trustProxy: e.TRUST_PROXY === 'true' || e.TRUST_PROXY === '1',
+    apns: apnsConfig(e),
   };
+}
+
+function apnsConfig(e: z.infer<typeof envSchema>): ApnsConfig | null {
+  const parts = { APNS_KEY_ID: e.APNS_KEY_ID, APNS_TEAM_ID: e.APNS_TEAM_ID, APNS_KEY_BASE64: e.APNS_KEY_BASE64 };
+  const missing = Object.entries(parts).filter(([, v]) => v === undefined).map(([k]) => k);
+  if (missing.length === 3) return null;
+  if (missing.length > 0) throw new Error(`APNs is partially configured, missing: ${missing.join(', ')}`);
+  const keyPem = Buffer.from(e.APNS_KEY_BASE64 ?? '', 'base64').toString('utf8');
+  try {
+    createPrivateKey(keyPem);
+  } catch {
+    throw new Error('APNS_KEY_BASE64 is not a base64-encoded .p8 key (base64 -w0 AuthKey_XXXXXXXXXX.p8)');
+  }
+  return { keyId: e.APNS_KEY_ID ?? '', teamId: e.APNS_TEAM_ID ?? '', keyPem, topic: e.APNS_TOPIC };
 }
 
 export function stripTrailingSlash(url: string): string {

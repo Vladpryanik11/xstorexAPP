@@ -1,12 +1,14 @@
 import Foundation
 
-/// Конфигурация сборки: адрес API из `Info.plist` (`IStoreAPIBaseURL`), версия и номер сборки.
+/// Конфигурация сборки: адрес API из `Info.plist` (`IStoreAPIBaseURL`), окружение APNs, версия и номер сборки.
 struct AppConfiguration: Sendable {
     static let fallbackBaseURL = URL(string: "http://localhost:8080")!
 
     let baseURL: URL
     let version: String
     let build: String
+    /// `sandbox` или `production`: то же окружение, что в entitlement `aps-environment` этой сборки.
+    var apnsEnvironment: String = AppConfiguration.defaultAPNsEnvironment
 
     var buildNumber: Int { Int(build) ?? 0 }
 
@@ -27,6 +29,20 @@ struct AppConfiguration: Sendable {
         }
         let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-        return AppConfiguration(baseURL: baseURL, version: version, build: build)
+        var configuration = AppConfiguration(baseURL: baseURL, version: version, build: build)
+        switch bundle.object(forInfoDictionaryKey: "IStoreAPSEnvironment") as? String {
+        case "development": configuration.apnsEnvironment = "sandbox"
+        case "production": configuration.apnsEnvironment = "production"
+        default: break
+        }
+        return configuration
+    }
+
+    static var defaultAPNsEnvironment: String {
+        #if DEBUG
+        return "sandbox"
+        #else
+        return "production"
+        #endif
     }
 }

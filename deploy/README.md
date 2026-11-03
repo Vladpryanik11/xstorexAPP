@@ -73,6 +73,31 @@ curl -s -X PUT -H "$H" -H 'Content-Type: application/json' \
 
 Полный список админ-маршрутов — в [docs/API.md](../docs/API.md).
 
+## Push-уведомления
+
+Необязательно: без ключа сервер работает, но уведомлений об обновлениях не будет.
+
+1. В [Apple Developer → Keys](https://developer.apple.com/account/resources/authkeys/list) создайте ключ с галочкой **Apple Push Notifications service (APNs)** и скачайте `AuthKey_XXXXXXXXXX.p8`. Файл скачивается один раз, храните его как пароль.
+2. У App ID приложения iStore (`com.istore.app`) включите capability **Push Notifications** и перевыпустите профиль подписи.
+3. Перенесите ключ на сервер и впишите в `deploy/.env`:
+
+```bash
+grep -q '^APNS_KEY_BASE64=' .env || echo 'APNS_KEY_BASE64=' >> .env
+sed -i "s|^APNS_KEY_BASE64=.*|APNS_KEY_BASE64=$(base64 -w0 AuthKey_XXXXXXXXXX.p8)|" .env
+nano .env   # APNS_KEY_ID — 10 символов из имени ключа, APNS_TEAM_ID — Team ID аккаунта
+docker compose up -d
+```
+
+4. Проверьте на своём устройстве: войдите в iStore, разрешите уведомления (запрос появляется при первой подписке на приложение) и отправьте тестовое уведомление (`A` и `H` — как в разделе 4):
+
+```bash
+curl -s -X POST -H "$H" -H 'Content-Type: application/json' -d '{"account_id":"acc_…"}' $A/push/test
+```
+
+`account_id` виден в ответе активации и в `GET /api/v1/client/profile`. Ответ `"sent": 1` значит, что APNs принял уведомление. Если вместо этого пришла ошибка `BadDeviceToken`, проверьте, что сборка iStore и сервер используют одно окружение APNs: Ad Hoc и Enterprise работают с production, сборка из Xcode — с sandbox.
+
+Подписчики приложения получают push, когда вы загружаете билд с версией выше текущей.
+
 ## Кто сможет установить приложения
 
 iOS ставит IPA вне App Store только на устройства, которые разрешены в профиле подписи этого IPA:

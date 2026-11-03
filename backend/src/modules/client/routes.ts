@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { AppContext } from '../../context.js';
@@ -135,10 +135,14 @@ export async function clientRoutes(app: FastifyInstance, opts: { ctx: AppContext
       tzOffsetMinutes: body.tz_offset_minutes ?? null,
       updatedAt: ctx.now(),
     };
-    await ctx.db
-      .insert(pushTokens)
-      .values({ deviceId: auth.device.id, ...values })
-      .onConflictDoUpdate({ target: pushTokens.deviceId, set: values });
+    await ctx.db.transaction(async (tx) => {
+      // Токен APNs принадлежит одной установке: после повторного входа он уходит новому устройству.
+      await tx.delete(pushTokens).where(and(eq(pushTokens.apnsToken, values.apnsToken), ne(pushTokens.deviceId, auth.device.id)));
+      await tx
+        .insert(pushTokens)
+        .values({ deviceId: auth.device.id, ...values })
+        .onConflictDoUpdate({ target: pushTokens.deviceId, set: values });
+    });
     return reply.code(204).send();
   });
 }

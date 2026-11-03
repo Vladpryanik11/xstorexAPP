@@ -42,6 +42,7 @@ final class FeatureFactory {
             summary: summary,
             catalog: container.catalogService,
             follows: container.followService,
+            pushPermission: container.push,
             live: container.liveSync,
             installService: container.installService,
             device: container.device,

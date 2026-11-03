@@ -9,6 +9,8 @@ import { appBuilds, apps, type BuildRow } from '../../db/schema.js';
 import { newId } from '../../lib/crypto.js';
 import { AppError, conflict, invalidRequest, notFound } from '../../lib/errors.js';
 import { IpaError, readIpaInfo } from '../../lib/ipa.js';
+import { compareVersions } from '../../lib/version.js';
+import { notifyAppUpdate } from '../../push/notifier.js';
 import { iso } from '../catalog/present.js';
 import { recordChanges } from '../catalog/revision.js';
 
@@ -140,6 +142,7 @@ export async function addBuildFromFile(
       return created;
     });
     await ctx.bus.notify();
+    if (app.published && compareVersions(version, app.version) > 0) notifyAppUpdate(ctx, appId);
     return row;
   } catch (err) {
     await ctx.storage.delete(blobKey).catch(() => undefined);

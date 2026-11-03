@@ -20,6 +20,7 @@ final class AppContainer {
     let telemetry: TelemetryRecorder
     let installService: InstallService
     let imagePipeline: ImagePipeline
+    let push: PushCoordinator
 
     var api: APIClientProtocol { apiClient }
 
@@ -64,5 +65,6 @@ final class AppContainer {
             telemetry: telemetry
         )
         imagePipeline = ImagePipeline.shared
+        push = PushCoordinator(api: apiClient, tokenStore: tokenStore, environment: configuration.apnsEnvironment)
     }
 }

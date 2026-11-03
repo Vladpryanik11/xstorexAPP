@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -9,7 +10,22 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        true
+        // Делегат нужен до конца запуска: иначе нажатие на уведомление при холодном старте потеряется.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            UNUserNotificationCenter.current().delegate = container.push
+        }
+        return true
+    }
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let push = container.push
+        Task {
+            await push.didRegister(deviceToken: deviceToken)
+        }
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // Симулятор или профиль подписи без Push Notifications: приложение работает без push.
     }
 
     func application(

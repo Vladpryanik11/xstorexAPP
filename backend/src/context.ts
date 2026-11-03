@@ -3,6 +3,7 @@ import type { Db } from './db/index.js';
 import type { BlobStorage } from './storage/blob-storage.js';
 import type { SigningProvider } from './signing/signing-provider.js';
 import type { CatalogBus } from './modules/catalog/bus.js';
+import type { PushNotifier } from './push/notifier.js';
 
 export interface AppContext {
   config: AppConfig;
@@ -10,6 +11,7 @@ export interface AppContext {
   storage: BlobStorage;
   signing: SigningProvider;
   bus: CatalogBus;
+  push: PushNotifier;
   now(): Date;
   /** Absolute URL for a stored asset (`icons/x.png`) or passthrough for http(s) URLs. */
   assetUrl(value: string): string;

@@ -30,6 +30,10 @@ services:
       RENEW_URL: ${RENEW_URL:-}
       TRUST_PROXY: "true"
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      APNS_KEY_BASE64: ${APNS_KEY_BASE64:-}
+      APNS_TOPIC: ${APNS_TOPIC:-com.istore.app}
     volumes:
       - storage:/data
     expose:

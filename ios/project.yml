@@ -34,10 +34,17 @@ targets:
       configs:
         Debug:
           ISTORE_API_BASE_URL: "http://localhost:8080"
+          # Окружение APNs: сборка из Xcode — development (sandbox), Ad Hoc и Enterprise — production.
+          APS_ENVIRONMENT: development
         Release:
           ISTORE_API_BASE_URL: "https://api.istore.example"
+          APS_ENVIRONMENT: production
           STRIP_STYLE: all
           DEPLOYMENT_POSTPROCESSING: YES
+    entitlements:
+      path: iStore/iStore.entitlements
+      properties:
+        aps-environment: $(APS_ENVIRONMENT)
     info:
       path: iStore/Info.plist
       properties:
@@ -58,6 +65,7 @@ targets:
               - istore
         LSRequiresIPhoneOS: true
         IStoreAPIBaseURL: $(ISTORE_API_BASE_URL)
+        IStoreAPSEnvironment: $(APS_ENVIRONMENT)
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false

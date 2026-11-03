@@ -15,6 +15,9 @@ import { clientRoutes } from './modules/client/routes.js';
 import { followsRoutes } from './modules/follows/routes.js';
 import { installsRoutes } from './modules/installs/routes.js';
 import { searchRoutes } from './modules/search/routes.js';
+import { ApnsSender } from './push/apns.js';
+import { PushNotifier, type PushLog } from './push/notifier.js';
+import { DisabledPushSender, type PushSender } from './push/push-sender.js';
 import { PreSignedProvider } from './signing/presigned.js';
 import type { SigningProvider } from './signing/signing-provider.js';
 import type { BlobStorage } from './storage/blob-storage.js';
@@ -25,6 +28,8 @@ export interface BuildAppOptions {
   database?: Database;
   storage?: BlobStorage;
   signing?: SigningProvider;
+  /** Канал push; по умолчанию APNs из конфига или выключенный. */
+  push?: PushSender;
   now?: () => Date;
 }
 
@@ -62,17 +67,21 @@ function loggerOptions(config: AppConfig): FastifyServerOptions['logger'] {
   };
 }
 
+const SILENT_LOG: PushLog = { info: () => undefined, error: () => undefined };
+
 export function createContext(
   config: AppConfig,
   database: Database,
-  deps: { storage?: BlobStorage; signing?: SigningProvider; now?: () => Date } = {},
+  deps: { storage?: BlobStorage; signing?: SigningProvider; push?: PushSender; log?: PushLog; now?: () => Date } = {},
 ): AppContext {
+  const sender = deps.push ?? (config.apns ? new ApnsSender(config.apns) : new DisabledPushSender());
   return {
     config,
     db: database.db,
     storage: deps.storage ?? new LocalBlobStorage(config.storageDir),
     signing: deps.signing ?? new PreSignedProvider(),
     bus: new CatalogBus(database.db),
+    push: new PushNotifier(database.db, sender, deps.log ?? SILENT_LOG),
     now: deps.now ?? (() => new Date()),
     ...createUrlHelpers(config.publicBaseUrl),
   };
@@ -87,7 +96,7 @@ export async function buildApp(config: AppConfig, options: BuildAppOptions = {})
 
   const ownsDatabase = !options.database;
   const database = options.database ?? (await openDatabase({ databaseUrl: config.databaseUrl, pgliteDir: config.pgliteDir }));
-  const ctx = createContext(config, database, options);
+  const ctx = createContext(config, database, { ...options, log: app.log });
   await ctx.bus.init();
   ctx.bus.startPolling(config.catalogPollMs);
   app.decorate('ctx', ctx);
@@ -145,6 +154,8 @@ export async function buildApp(config: AppConfig, options: BuildAppOptions = {})
   });
   app.addHook('onClose', async () => {
     ctx.bus.stop();
+    await ctx.push.drain();
+    await ctx.push.sender.close();
     if (ownsDatabase) await database.close();
   });
 

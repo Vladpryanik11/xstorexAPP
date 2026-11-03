@@ -24,6 +24,7 @@ const app = await buildApp(config);
 
 if (!config.adminToken) app.log.warn('ADMIN_TOKEN is not set: /admin/v1 answers 503');
 if (!process.env.GRANT_SECRET) app.log.warn('GRANT_SECRET is not set: install links are invalidated on restart');
+if (!config.apns) app.log.warn('APNs is not configured: push notifications are disabled');
 if (!config.publicBaseUrl.startsWith('https://')) {
   app.log.warn({ publicBaseUrl: config.publicBaseUrl }, 'PUBLIC_BASE_URL is not HTTPS: OTA install will not work on a device');
 }

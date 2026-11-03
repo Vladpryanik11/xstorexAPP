@@ -8,6 +8,7 @@ final class AppDetailViewController: UIViewController {
     private var detail: CatalogApp?
     private let catalog: CatalogServicing
     private let follows: FollowServicing
+    private let pushPermission: PushPermissionRequesting
     private let live: CatalogLiveObserving
     private let installService: InstallService
     private let device: DeviceInfo
@@ -43,6 +44,7 @@ final class AppDetailViewController: UIViewController {
         summary: AppSummary?,
         catalog: CatalogServicing,
         follows: FollowServicing,
+        pushPermission: PushPermissionRequesting,
         live: CatalogLiveObserving,
         installService: InstallService,
         device: DeviceInfo,
@@ -52,6 +54,7 @@ final class AppDetailViewController: UIViewController {
         self.summary = summary
         self.catalog = catalog
         self.follows = follows
+        self.pushPermission = pushPermission
         self.live = live
         self.installService = installService
         self.device = device
@@ -501,6 +504,8 @@ final class AppDetailViewController: UIViewController {
                 guard let self = self else { return }
                 if status.following && !wasFollowing {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    // Разрешение спрашиваем в момент, когда понятно, зачем оно: после первой подписки.
+                    self.pushPermission.requestAuthorizationIfNeeded()
                 }
                 self.isUpdatingFollow = false
                 self.followStatus = status
