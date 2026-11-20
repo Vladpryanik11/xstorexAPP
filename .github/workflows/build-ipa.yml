@@ -1,0 +1,83 @@
+name: iOS IPA (unsigned)
+
+on:
+  push:
+    branches:
+      - build/xstorex-unsigned-ipa
+    paths:
+      - ".github/workflows/build-ipa.yml"
+      - "ios/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unsigned-ipa:
+    name: Build unsigned XstoreX IPA
+    runs-on: macos-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: ios
+    env:
+      # Override with repository variable XSTOREX_API_BASE_URL before a production build.
+      API_BASE_URL: ${{ vars.XSTOREX_API_BASE_URL || 'https://api.istore.example' }}
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Show Xcode
+        run: xcodebuild -version
+
+      - name: Verify localization
+        run: node scripts/check-l10n.mjs
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build for physical iPhone/iPad (without signing)
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project iStore.xcodeproj \
+            -scheme iStore \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/XstoreDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            ISTORE_API_BASE_URL="$API_BASE_URL" \
+            build
+
+      - name: Package Payload directory as an IPA
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/XstoreDerivedData/Build/Products/Release-iphoneos/iStore.app"
+          test -d "$APP"
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          ditto "$APP" "$RUNNER_TEMP/ipa/Payload/iStore.app"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$GITHUB_WORKSPACE/XstoreX-unsigned.ipa" Payload)
+          unzip -t "$GITHUB_WORKSPACE/XstoreX-unsigned.ipa" | tail -2
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: XstoreX-unsigned-ipa
+          path: XstoreX-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build summary
+        run: |
+          {
+            echo '### XstoreX: unsigned IPA ready'
+            echo ''
+            echo 'Download the **XstoreX-unsigned-ipa** artifact (ZIP), extract **XstoreX-unsigned.ipa**, and sign the IPA with a valid provisioning profile and certificate (e.g. in Feather).'
+            echo ''
+            echo '> The app is **not signed**. It will not install directly. The backend API URL used at build time was: `'\"$API_BASE_URL\"'`.'
+          } >> "$GITHUB_STEP_SUMMARY"
