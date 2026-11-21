@@ -49,8 +49,8 @@ targets:
       path: iStore/Info.plist
       properties:
         CFBundleDevelopmentRegion: $(DEVELOPMENT_LANGUAGE)
-        CFBundleDisplayName: Xstore
-        CFBundleName: $(PRODUCT_NAME)
+        CFBundleDisplayName: xstorex
+        CFBundleName: xstorex
         CFBundleExecutable: $(EXECUTABLE_NAME)
         CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
         CFBundlePackageType: $(PRODUCT_BUNDLE_PACKAGE_TYPE)

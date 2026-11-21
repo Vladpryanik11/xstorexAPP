@@ -1,7 +1,7 @@
-/* Xstore — русский */
+/* xstorex — русский */
 
 /* Бренд */
-"brand.name" = "Xstore";
+"brand.name" = "xstorex";
 
 /* Общее */
 "common.ok" = "ОК";
@@ -20,14 +20,14 @@
 "tab.search" = "Поиск";
 
 /* Вход */
-"activation.title" = "Добро пожаловать в Xstore";
+"activation.title" = "Добро пожаловать в xstorex";
 "activation.subtitle" = "Воспользуйтесь своим кодом, чтобы восстановить доступ к установке.";
 "activation.step1" = "Введите код из письма о подписке.";
 "activation.step2" = "Нажмите «Войти» — устройство вас запомнит.";
 "activation.code.placeholder" = "XXXX-XXXX-XXXX";
 "activation.code.label" = "Код активации";
 "activation.submit" = "Войти";
-"activation.hint" = "Кода ещё нет? Оформите подписку на сайте Xstore — код придёт на почту.";
+"activation.hint" = "Кода ещё нет? Оформите подписку на сайте xstorex — код придёт на почту.";
 "activation.error.invalid_code" = "Такого кода нет. Проверьте, нет ли опечатки, и попробуйте снова.";
 "activation.error.code_used" = "Этот код уже работает на другом устройстве. Возьмите новый код или напишите в поддержку.";
 "activation.error.account_inactive" = "Аккаунт приостановлен. Продлите подписку или напишите в поддержку.";
@@ -178,11 +178,11 @@
 "account.device_format" = "%@, iOS %@";
 "account.install_id" = "ID установки";
 "account.install_id_format" = "•••• %@";
-"account.app_version" = "Версия Xstore";
+"account.app_version" = "Версия xstorex";
 "account.app_version_format" = "%@ (%@)";
 "account.legacy_sign_in" = "Ввести ранее выданный код";
 "account.sign_out" = "Выйти";
-"account.sign_out.confirm_title" = "Выйти из Xstore?";
+"account.sign_out.confirm_title" = "Выйти из xstorex?";
 "account.sign_out.confirm_message" = "Установленные приложения останутся на устройстве. Чтобы войти снова, понадобится код активации.";
 
 /* Подписки на приложения */
@@ -199,7 +199,7 @@
 
 /* Обновление клиента */
 "update.title" = "Готово обновление";
-"update.mandatory.title" = "Пора обновить Xstore";
+"update.mandatory.title" = "Пора обновить xstorex";
 "update.version_format" = "Версия %@";
 "update.hint" = "После «Обновить» iOS попросит подтвердить установку.";
 "update.mandatory.message" = "Эта версия больше не поддерживается. Обновитесь, чтобы пользоваться магазином.";
