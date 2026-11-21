@@ -49,6 +49,7 @@ actor CatalogLiveSync: CatalogLiveObserving {
         configuration.timeoutIntervalForResource = 60 * 60 * 24
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        VisualPreviewURLProtocol.configure(configuration)
         return URLSession(configuration: configuration)
     }
 
@@ -138,12 +139,9 @@ actor CatalogLiveSync: CatalogLiveObserving {
         if let revision = lastRevision {
             query.append(QueryParam("since", String(revision)))
         }
-        let endpoint = Endpoint<EmptyResponse>(path: "/catalog/stream", query: query, timeout: 60)
+        let endpoint = Endpoint<EmptyResponse>(path: "/catalog/stream", query: query, requiresAuth: false, timeout: 60)
         guard var request = try? await api.makeRequest(for: endpoint) else {
             return .failed
-        }
-        guard request.value(forHTTPHeaderField: "Authorization") != nil else {
-            return .unauthorized
         }
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         // `Last-Event-ID` не шлём: сервер предпочёл бы его `since`, а id двигается только по событиям SSE

@@ -1,0 +1,64 @@
+name: Xstore Visual Preview
+
+on:
+  push:
+    branches:
+      - build/xstore-visual-preview
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Generate offline demo catalog
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+          node scripts/export-visual-preview.mjs ../ios/iStore/Resources/VisualPreview
+      - name: Build for iPhone
+        working-directory: ios
+        run: |
+          node scripts/check-l10n.mjs
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -quiet \
+            -project iStore.xcodeproj \
+            -scheme iStore \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/XstoreDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            PRODUCT_BUNDLE_IDENTIFIER=com.istore.app.preview \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS=XSTORE_VISUAL_PREVIEW \
+            ISTORE_API_BASE_URL=https://xstore-preview.invalid \
+            build
+      - name: Verify resources and package preview IPA
+        run: |
+          app="$RUNNER_TEMP/XstoreDerivedData/Build/Products/Release-iphoneos/iStore.app"
+          test -s "$app/iStore"
+          test -s "$app/VisualPreview.json"
+          test -s "$app/preview-icons-quillstack.png"
+          mkdir -p "$RUNNER_TEMP/xstore-preview/Payload"
+          ditto "$app" "$RUNNER_TEMP/xstore-preview/Payload/iStore.app"
+          (cd "$RUNNER_TEMP/xstore-preview" && zip -qry "$GITHUB_WORKSPACE/Xstore-Preview-unsigned.ipa" Payload)
+          unzip -tq "$GITHUB_WORKSPACE/Xstore-Preview-unsigned.ipa"
+      - name: Upload preview IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xstore-Preview-IPA
+          path: Xstore-Preview-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14

@@ -75,36 +75,29 @@ final class FeatureFactory {
 
     // MARK: - Шлюзы
 
-    func makeLaunchPlaceholder() -> LaunchPlaceholderViewController {
-        LaunchPlaceholderViewController()
-    }
-
-    func makeActivation(onActivated: @escaping (Account) -> Void) -> ActivationViewController {
-        ActivationViewController(auth: container.authService, onActivated: onActivated)
-    }
-
     func makeStoreClosed(closure: StoreClosure?, onRefresh: @escaping () -> Void) -> StoreClosedViewController {
         StoreClosedViewController(closure: closure, onRefresh: onRefresh)
     }
 
-    func makeSubscriptionRenew(
-        account: Account?,
-        onRecheck: @escaping @MainActor () async -> Bool
-    ) -> SubscriptionRenewViewController {
-        SubscriptionRenewViewController(account: account, onRecheck: onRecheck)
-    }
-
     // MARK: - Шиты
 
-    func makeAccount(router: AppRouting, onSignOut: @escaping () -> Void) -> UIViewController {
+    func makeAccount(
+        router: AppRouting,
+        isSignedIn: Bool,
+        onSignIn: @escaping () -> Void,
+        onSignOut: @escaping () -> Void
+    ) -> UIViewController {
         let controller = AccountViewController(
             clientService: container.clientService,
+            auth: container.authService,
             configuration: container.configuration,
             device: container.device,
+            isSignedIn: isSignedIn,
             makeFollowingList: { [weak self, weak router] in
                 guard let self = self, let router = router else { return nil }
                 return self.makeFollowingList(router: router)
             },
+            onSignIn: onSignIn,
             onSignOut: onSignOut
         )
         let navigation = UINavigationController(rootViewController: controller)

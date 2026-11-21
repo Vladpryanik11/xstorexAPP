@@ -21,7 +21,7 @@
 
 /* Activation */
 "activation.title" = "Welcome to Xstore";
-"activation.subtitle" = "Two quick steps and the catalog is yours.";
+"activation.subtitle" = "Use your existing code to restore install access.";
 "activation.step1" = "Enter the code from your subscription email.";
 "activation.step2" = "Tap “Sign in” — this device will remember you.";
 "activation.code.placeholder" = "XXXX-XXXX-XXXX";
@@ -137,6 +137,8 @@
 "install.error.space.title" = "Not enough space";
 "install.error.space.message" = "Free up some space in Settings → General → Storage and try again.";
 "install.error.generic.title" = "Something went wrong";
+"install.error.access_required.title" = "Install access required";
+"install.error.access_required.message" = "If you already have an access code, enter it in Account.";
 "install.error.generic.message" = "We couldn’t prepare the app. Try again, and if it keeps happening, contact support.";
 
 /* Search */
@@ -178,6 +180,7 @@
 "account.install_id_format" = "•••• %@";
 "account.app_version" = "Xstore version";
 "account.app_version_format" = "%@ (%@)";
+"account.legacy_sign_in" = "Use an existing access code";
 "account.sign_out" = "Sign out";
 "account.sign_out.confirm_title" = "Sign out of Xstore?";
 "account.sign_out.confirm_message" = "Installed apps stay on your device. To sign back in, you’ll need an activation code.";

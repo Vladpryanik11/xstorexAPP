@@ -13,6 +13,7 @@ ios/*.xcodeproj
 ios/*.xcworkspace
 ios/build/
 ios/DerivedData/
+/ios/iStore/Resources/VisualPreview/
 xcuserdata/
 .DS_Store
 # никогда не коммитить чужие IPA и сертификаты

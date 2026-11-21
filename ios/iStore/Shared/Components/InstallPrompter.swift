@@ -15,10 +15,12 @@ enum InstallPrompter {
             alert.addAction(UIAlertAction(title: L10n.tr("common.close"), style: .cancel) { _ in
                 service.dismiss(appId: app.id)
             })
-            alert.addAction(UIAlertAction(title: L10n.tr("common.retry"), style: .default) { _ in
-                service.dismiss(appId: app.id)
-                start(app: app, service: service, from: controller)
-            })
+            if code != InstallErrorCode.accessRequired {
+                alert.addAction(UIAlertAction(title: L10n.tr("common.retry"), style: .default) { _ in
+                    service.dismiss(appId: app.id)
+                    start(app: app, service: service, from: controller)
+                })
+            }
             controller.present(alert, animated: true)
         case .preparing, .ready, .handingOff, .installing:
             let alert = UIAlertController(

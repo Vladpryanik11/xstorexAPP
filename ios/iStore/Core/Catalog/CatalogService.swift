@@ -28,6 +28,7 @@ struct CatalogService: CatalogServicing {
         try await api.send(Endpoint<GroupingsResponse>(
             path: "/groupings",
             query: [QueryParam("tab", tab.rawValue)],
+            requiresAuth: false,
             usesETag: true
         ))
     }
@@ -36,6 +37,7 @@ struct CatalogService: CatalogServicing {
         try await api.send(Endpoint<RoomPage>(
             path: "/groupings/\(id)",
             query: Paging.params(cursor: cursor, limit: Self.pageSize),
+            requiresAuth: false,
             usesETag: true
         ))
     }
@@ -44,39 +46,44 @@ struct CatalogService: CatalogServicing {
         try await api.send(Endpoint<CategoryPage>(
             path: "/catalog/categories/\(id)",
             query: Paging.params(cursor: cursor, limit: Self.pageSize),
+            requiresAuth: false,
             usesETag: true
         ))
     }
 
     func app(id: String) async throws -> CatalogApp {
-        try await api.send(Endpoint<CatalogApp>(path: "/catalog/apps/\(id)", usesETag: true))
+        try await api.send(Endpoint<CatalogApp>(path: "/catalog/apps/\(id)", requiresAuth: false, usesETag: true))
     }
 
     func versions(appId: String, cursor: String?) async throws -> Page<AppVersion> {
         try await api.send(Endpoint<Page<AppVersion>>(
             path: "/catalog/apps/\(appId)/versions",
-            query: Paging.params(cursor: cursor, limit: Self.pageSize)
+            query: Paging.params(cursor: cursor, limit: Self.pageSize),
+            requiresAuth: false
         ))
     }
 
     func changes(since revision: Int) async throws -> ChangesResponse {
         try await api.send(Endpoint<ChangesResponse>(
             path: "/catalog/changes",
-            query: [QueryParam("since", String(revision)), QueryParam("limit", "500")]
+            query: [QueryParam("since", String(revision)), QueryParam("limit", "500")],
+            requiresAuth: false
         ))
     }
 
     func search(query: String, cursor: String?) async throws -> SearchResponse {
         try await api.send(Endpoint<SearchResponse>(
             path: "/search",
-            query: [QueryParam("q", query)] + Paging.params(cursor: cursor, limit: Self.pageSize)
+            query: [QueryParam("q", query)] + Paging.params(cursor: cursor, limit: Self.pageSize),
+            requiresAuth: false
         ))
     }
 
     func hints(query: String) async throws -> [SearchHint] {
         let response = try await api.send(Endpoint<SearchHintsResponse>(
             path: "/search/hints",
-            query: [QueryParam("q", query)]
+            query: [QueryParam("q", query)],
+            requiresAuth: false
         ))
         return response.hints
     }

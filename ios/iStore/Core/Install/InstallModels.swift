@@ -108,6 +108,7 @@ enum InstallErrorCode {
     static let timedOut = "install_timed_out"
     static let appNotAvailable = "app_not_available"
     static let noBuild = "no_build"
+    static let accessRequired = "install_access_required"
     static let accountInactive = "account_inactive"
     static let offline = "offline"
     static let generic = "generic"

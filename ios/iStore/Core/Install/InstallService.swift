@@ -259,6 +259,8 @@ final class InstallService {
             return InstallErrorCode.appNotAvailable
         case .conflict(let code):
             return code == "no_build" ? InstallErrorCode.noBuild : code
+        case .unauthorized:
+            return InstallErrorCode.accessRequired
         case .accountInactive:
             return InstallErrorCode.accountInactive
         case .grantExpired:

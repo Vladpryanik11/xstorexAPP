@@ -17,6 +17,7 @@ actor ImagePipeline {
         )
         configuration.requestCachePolicy = .returnCacheDataElseLoad
         configuration.timeoutIntervalForRequest = 30
+        VisualPreviewURLProtocol.configure(configuration)
         session = URLSession(configuration: configuration)
         memory.totalCostLimit = 64 * 1024 * 1024
     }

@@ -1,14 +1,10 @@
 import SafariServices
 import UIKit
 
-/// Роутер приложения. Шлюзы (вход, «Подписка закончилась», «Магазин закрыт», обязательное обновление)
-/// живут в отдельных `UIWindow` поверх основного окна, поэтому интерфейс под ними сохраняет состояние.
-/// Порядок снизу вверх: основное окно → SubscriptionRenew → Activation → StoreClosed → обязательное обновление.
+/// Роутер приложения. Каталог открывается сразу, а состояние магазина и версия проверяются в фоне.
 @MainActor
 final class AppFlowController: AppRouting {
     private enum GateLevel {
-        static let subscriptionRenew: CGFloat = 10
-        static let activation: CGFloat = 20
         static let storeClosed: CGFloat = 30
         static let mandatoryUpdate: CGFloat = 40
     }
@@ -19,17 +15,12 @@ final class AppFlowController: AppRouting {
     let mainWindow: UIWindow
 
     private var tabBarController: MainTabBarController?
-    private var activationWindow: UIWindow?
-    private var renewWindow: UIWindow?
     private var storeClosedWindow: UIWindow?
     private var updateWindow: UIWindow?
 
     private weak var storeClosedController: StoreClosedViewController?
-    private weak var renewController: SubscriptionRenewViewController?
 
-    private var lastAccount: Account?
     private var storePollTask: Task<Void, Never>?
-    private var isSignedIn = false
     private var pendingAppId: String?
     private var didCheckClientUpdate = false
     private var isBootstrapped = false
@@ -45,43 +36,27 @@ final class AppFlowController: AppRouting {
     // MARK: - Запуск
 
     func start() {
-        mainWindow.rootViewController = factory.makeLaunchPlaceholder()
+        presentMainInterface()
         mainWindow.makeKeyAndVisible()
 
         let apiClient = container.apiClient
         let telemetry = container.telemetry
-        let unauthorizedHandler: APIClient.UnauthorizedHandler = { [weak self] in
-            await self?.handleUnauthorized()
-        }
         let errorObserver: APIClient.ErrorObserver = { path, error in
             Task {
                 await telemetry.record(kind: "net.error", props: ["path": path, "code": error.code])
             }
         }
-        // Каталог, поиск и установки при истёкшей подписке отвечают `403 account_inactive`:
-        // вместо ошибки показываем окно продления.
-        let accountInactiveHandler: APIClient.AccountInactiveHandler = { [weak self] in
-            await self?.handleAccountInactive()
-        }
         container.push.onOpenApp = { [weak self] appId in
             self?.openApp(id: appId)
         }
         Task { [weak self] in
-            await apiClient.setUnauthorizedHandler(unauthorizedHandler)
-            await apiClient.setAccountInactiveHandler(accountInactiveHandler)
             await apiClient.setErrorObserver(errorObserver)
             await self?.bootstrap()
         }
     }
 
     private func bootstrap() async {
-        await refreshStoreState()
-        if await container.authService.isSignedIn() {
-            presentMainInterface()
-            await refreshAccount()
-        } else {
-            presentActivationGate()
-        }
+        async let storeState: Void = refreshStoreState()
         isBootstrapped = true
         await container.telemetry.record(
             kind: "app.launch",
@@ -89,6 +64,7 @@ final class AppFlowController: AppRouting {
         )
         await container.telemetry.start()
         await checkClientUpdate()
+        await storeState
     }
 
     // MARK: - Жизненный цикл сцены
@@ -97,11 +73,8 @@ final class AppFlowController: AppRouting {
         guard isBootstrapped else { return }
         Task { [weak self] in
             guard let self = self else { return }
+            await self.container.liveSync.start()
             await self.refreshStoreState()
-            if self.isSignedIn {
-                await self.refreshAccount()
-                await self.container.liveSync.start()
-            }
         }
     }
 
@@ -125,9 +98,9 @@ final class AppFlowController: AppRouting {
         openApp(id: parts[1])
     }
 
-    /// Карточка приложения из deeplink или push. До входа `app_id` ждёт основной интерфейс.
+    /// Карточка приложения из deeplink или push доступна при гостевом запуске.
     func openApp(id appId: String) {
-        guard isSignedIn, let navigation = currentNavigationController() else {
+        guard let navigation = currentNavigationController() else {
             pendingAppId = appId
             return
         }
@@ -141,7 +114,6 @@ final class AppFlowController: AppRouting {
     // MARK: - Основной интерфейс
 
     private func presentMainInterface() {
-        isSignedIn = true
         if tabBarController == nil {
             let tabs = MainTabBarController(
                 factory: factory,
@@ -163,123 +135,8 @@ final class AppFlowController: AppRouting {
         }
     }
 
-    private func resetMainInterface() {
-        isSignedIn = false
-        tabBarController?.dismiss(animated: false)
-        tabBarController = nil
-        mainWindow.rootViewController = factory.makeLaunchPlaceholder()
-        let liveSync = container.liveSync
-        let apiClient = container.apiClient
-        Task {
-            await liveSync.reset()
-            await apiClient.clearCache()
-        }
-    }
-
     private func currentNavigationController() -> UINavigationController? {
         tabBarController?.selectedViewController as? UINavigationController
-    }
-
-    // MARK: - Авторизация
-
-    private func handleUnauthorized() {
-        guard activationWindow == nil else { return }
-        lastAccount = nil
-        dismissRenewGate()
-        resetMainInterface()
-        presentActivationGate()
-    }
-
-    private func signOut() {
-        let auth = container.authService
-        Task { [weak self] in
-            await auth.signOut()
-            self?.handleUnauthorized()
-        }
-    }
-
-    private func presentActivationGate() {
-        guard activationWindow == nil else { return }
-        let controller = factory.makeActivation { [weak self] account in
-            self?.completeActivation(account)
-        }
-        activationWindow = makeGateWindow(root: controller, level: GateLevel.activation)
-        updateKeyWindow()
-    }
-
-    private func completeActivation(_ account: Account) {
-        dismissGateWindow(activationWindow)
-        activationWindow = nil
-        presentMainInterface()
-        apply(account: account)
-        updateKeyWindow()
-        let telemetry = container.telemetry
-        Task {
-            await telemetry.flush()
-        }
-    }
-
-    // MARK: - Подписка
-
-    private func refreshAccount() async {
-        do {
-            let profile = try await container.clientService.profile()
-            apply(account: profile.account)
-        } catch APIError.accountInactive {
-            presentRenewGate()
-        } catch {
-            // Сеть недоступна: оставляем текущее состояние, проверим при следующем возврате.
-        }
-    }
-
-    private func apply(account: Account) {
-        lastAccount = account
-        if account.isActive {
-            dismissRenewGate()
-        } else {
-            presentRenewGate()
-        }
-    }
-
-    private func recheckSubscription() async -> Bool {
-        do {
-            let profile = try await container.clientService.profile()
-            apply(account: profile.account)
-            return profile.account.isActive
-        } catch {
-            return false
-        }
-    }
-
-    private func handleAccountInactive() {
-        guard isSignedIn, renewWindow == nil else { return }
-        presentRenewGate()
-        // Профиль работает и при истёкшей подписке: подтягиваем `renew_url` и срок.
-        Task { [weak self] in
-            await self?.refreshAccount()
-        }
-    }
-
-    private func presentRenewGate() {
-        guard isSignedIn else { return }
-        if let controller = renewController, renewWindow != nil {
-            controller.update(account: lastAccount)
-            return
-        }
-        let controller = factory.makeSubscriptionRenew(account: lastAccount) { [weak self] in
-            guard let self = self else { return false }
-            return await self.recheckSubscription()
-        }
-        renewController = controller
-        renewWindow = makeGateWindow(root: controller, level: GateLevel.subscriptionRenew)
-        updateKeyWindow()
-    }
-
-    private func dismissRenewGate() {
-        guard renewWindow != nil else { return }
-        dismissGateWindow(renewWindow)
-        renewWindow = nil
-        updateKeyWindow()
     }
 
     // MARK: - Магазин закрыт
@@ -414,7 +271,7 @@ final class AppFlowController: AppRouting {
 
     /// Ключевым делается самое верхнее видимое окно.
     private func updateKeyWindow() {
-        let ordered = [updateWindow, storeClosedWindow, activationWindow, renewWindow].compactMap { $0 }
+        let ordered = [updateWindow, storeClosedWindow].compactMap { $0 }
         if let top = ordered.first {
             top.makeKey()
         } else {
@@ -445,11 +302,26 @@ final class AppFlowController: AppRouting {
     }
 
     func showAccount(from source: UIViewController) {
-        let sheet = factory.makeAccount(router: self) { [weak self] in
-            self?.signOut()
+        Task { [weak self, weak source] in
+            guard let self, let source else { return }
+            let auth = self.container.authService
+            let signedIn = await auth.isSignedIn()
+            let presenter = source.navigationController ?? source
+            guard presenter.viewIfLoaded?.window != nil, presenter.presentedViewController == nil else { return }
+            let sheet = self.factory.makeAccount(
+                router: self,
+                isSignedIn: signedIn,
+                onSignIn: { [weak self] in
+                    guard let self else { return }
+                    self.container.push.refreshRegistration()
+                    Task { await self.container.telemetry.flush() }
+                },
+                onSignOut: {
+                    Task { await auth.signOut() }
+                }
+            )
+            presenter.present(sheet, animated: true)
         }
-        let presenter = source.navigationController ?? source
-        presenter.present(sheet, animated: true)
     }
 
     func openExternal(_ url: URL, from source: UIViewController) {

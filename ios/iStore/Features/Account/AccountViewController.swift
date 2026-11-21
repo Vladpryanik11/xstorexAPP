@@ -1,7 +1,7 @@
 import SafariServices
 import UIKit
 
-/// Шит «Аккаунт»: план, статус, срок, «Продлить», отслеживаемые приложения, устройство, версия, «Выйти».
+/// Шит «Аккаунт»: сведения об устройстве и доступ к ранее выданному аккаунту.
 final class AccountViewController: UITableViewController {
     private enum Row {
         case summary
@@ -13,31 +13,41 @@ final class AccountViewController: UITableViewController {
         case device
         case installId
         case appVersion
+        case legacySignIn
         case signOut
     }
 
     private let clientService: ClientServicing
+    private let auth: AuthServicing
     private let configuration: AppConfiguration
     private let device: DeviceInfo
     private let makeFollowingList: () -> UIViewController?
+    private let onSignIn: () -> Void
     private let onSignOut: () -> Void
 
     private var profile: ClientProfile?
+    private var isSignedIn: Bool
     private var loadError: APIError?
     private var isLoading = false
     private var sections: [[Row]] = []
 
     init(
         clientService: ClientServicing,
+        auth: AuthServicing,
         configuration: AppConfiguration,
         device: DeviceInfo,
+        isSignedIn: Bool,
         makeFollowingList: @escaping () -> UIViewController?,
+        onSignIn: @escaping () -> Void,
         onSignOut: @escaping () -> Void
     ) {
         self.clientService = clientService
+        self.auth = auth
         self.configuration = configuration
         self.device = device
+        self.isSignedIn = isSignedIn
         self.makeFollowingList = makeFollowingList
+        self.onSignIn = onSignIn
         self.onSignOut = onSignOut
         super.init(style: .insetGrouped)
     }
@@ -61,13 +71,17 @@ final class AccountViewController: UITableViewController {
     }
 
     private func load() {
-        guard !isLoading else { return }
+        guard isSignedIn, !isLoading else { return }
         isLoading = true
         let service = clientService
         Task { [weak self] in
             do {
                 let profile = try await service.profile()
                 self?.profile = profile
+                self?.loadError = nil
+            } catch APIError.unauthorized {
+                self?.isSignedIn = false
+                self?.profile = nil
                 self?.loadError = nil
             } catch {
                 self?.loadError = APIError.wrap(error)
@@ -78,6 +92,11 @@ final class AccountViewController: UITableViewController {
     }
 
     private func rebuildSections() {
+        guard isSignedIn else {
+            sections = [[.device, .installId, .appVersion], [.legacySignIn]]
+            tableView.reloadData()
+            return
+        }
         var accountRows: [Row] = [.summary, .plan, .status]
         if profile?.account.expiresAt != nil {
             accountRows.append(.expires)
@@ -170,6 +189,12 @@ final class AccountViewController: UITableViewController {
                 L10n.tr("account.app_version"),
                 L10n.tr("account.app_version_format", configuration.version, configuration.build)
             )
+        case .legacySignIn:
+            var content = UIListContentConfiguration.cell()
+            content.text = L10n.tr("account.legacy_sign_in")
+            cell.contentConfiguration = content
+            cell.selectionStyle = .default
+            cell.accessoryType = .disclosureIndicator
         case .signOut:
             var content = UIListContentConfiguration.cell()
             content.text = L10n.tr("account.sign_out")
@@ -218,6 +243,16 @@ final class AccountViewController: UITableViewController {
             present(safari, animated: true)
         case .following:
             guard let controller = makeFollowingList() else { return }
+            navigationController?.pushViewController(controller, animated: true)
+        case .legacySignIn:
+            let controller = ActivationViewController(auth: auth) { [weak self] _ in
+                guard let self else { return }
+                self.isSignedIn = true
+                self.onSignIn()
+                self.load()
+                self.rebuildSections()
+                self.navigationController?.popViewController(animated: true)
+            }
             navigationController?.pushViewController(controller, animated: true)
         case .signOut:
             confirmSignOut()

@@ -130,6 +130,8 @@ enum InstallErrorText {
             return "install.error.no_build"
         case InstallErrorCode.accountInactive:
             return "install.error.account_inactive"
+        case InstallErrorCode.accessRequired:
+            return "install.error.access_required"
         case InstallErrorCode.installURLMissing:
             return "install.error.url_missing"
         case InstallErrorCode.launchFailed:

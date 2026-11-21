@@ -21,7 +21,7 @@
 
 /* Вход */
 "activation.title" = "Добро пожаловать в Xstore";
-"activation.subtitle" = "Два коротких шага, и каталог ваш.";
+"activation.subtitle" = "Воспользуйтесь своим кодом, чтобы восстановить доступ к установке.";
 "activation.step1" = "Введите код из письма о подписке.";
 "activation.step2" = "Нажмите «Войти» — устройство вас запомнит.";
 "activation.code.placeholder" = "XXXX-XXXX-XXXX";
@@ -137,6 +137,8 @@
 "install.error.space.title" = "Не хватает места";
 "install.error.space.message" = "Освободите место в Настройках → Основные → Хранилище и попробуйте снова.";
 "install.error.generic.title" = "Что-то пошло не так";
+"install.error.access_required.title" = "Установка пока недоступна";
+"install.error.access_required.message" = "Если у вас уже есть код, введите его в разделе «Аккаунт».";
 "install.error.generic.message" = "Не получилось подготовить приложение. Попробуйте ещё раз, а если не выйдет — напишите в поддержку.";
 
 /* Поиск */
@@ -178,6 +180,7 @@
 "account.install_id_format" = "•••• %@";
 "account.app_version" = "Версия Xstore";
 "account.app_version_format" = "%@ (%@)";
+"account.legacy_sign_in" = "Ввести ранее выданный код";
 "account.sign_out" = "Выйти";
 "account.sign_out.confirm_title" = "Выйти из Xstore?";
 "account.sign_out.confirm_message" = "Установленные приложения останутся на устройстве. Чтобы войти снова, понадобится код активации.";

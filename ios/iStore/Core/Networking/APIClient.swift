@@ -56,6 +56,7 @@ actor APIClient: APIClientProtocol {
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.timeoutIntervalForRequest = 30
         configuration.waitsForConnectivity = false
+        VisualPreviewURLProtocol.configure(configuration)
         return URLSession(configuration: configuration)
     }
 
